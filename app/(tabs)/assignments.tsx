@@ -16,6 +16,7 @@ import {
 
 import { Button, EmptyState, Screen } from '@/components/ui';
 import { calendarDaysFrom, formatTime, startOfDay, stripHtml } from '@/features/assignments/format';
+import { formatRemaining } from '@/features/assignments/remaining';
 import { useAssignments } from '@/features/assignments/useAssignments';
 import { useI18n, type I18n } from '@/i18n';
 import { useAuth } from '@/store/auth';
@@ -34,21 +35,6 @@ function dateLabel(d: Date, t: I18n['t']): string {
     d: d.getDate(),
     w: t(`assignments.weekday${d.getDay()}`),
   });
-}
-
-/** 締切までの残り時間を日・時間・分の複合で表示 (例「2日3時間20分」)。 */
-function remainingLabel(timesortSec: number, nowMs: number, t: I18n['t']): string {
-  const diff = timesortSec * 1000 - nowMs;
-  if (diff <= 0) return t('assignments.overdue');
-  const totalMin = Math.floor(diff / 60_000);
-  const days = Math.floor(totalMin / 1440);
-  const hours = Math.floor((totalMin % 1440) / 60);
-  const mins = totalMin % 60;
-  const parts: string[] = [];
-  if (days > 0) parts.push(t('assignments.unitDay', { n: days }));
-  if (hours > 0) parts.push(t('assignments.unitHour', { n: hours }));
-  if (mins > 0 || parts.length === 0) parts.push(t('assignments.unitMinute', { n: mins }));
-  return t('assignments.remainingPrefix') + parts.join(t('assignments.remainingSeparator'));
 }
 
 export default function AssignmentsScreen() {
@@ -226,7 +212,7 @@ export default function AssignmentsScreen() {
                   {t('assignments.dueAt', { time: formatTime(item.timesort) })}
                 </Text>
                 <Text style={[styles.itemRemaining, { color: remainColor }]}>
-                  {remainingLabel(item.timesort, now, t)}
+                  {formatRemaining(item.timesort, now, t, 'assignments.overdue')}
                 </Text>
               </View>
             </Pressable>
@@ -282,7 +268,7 @@ export default function AssignmentsScreen() {
                       { color: selected.overdue ? colors.danger : colors.primary },
                     ]}
                   >
-                    {remainingLabel(selected.timesort, now, t)}
+                    {formatRemaining(selected.timesort, now, t, 'assignments.overdue')}
                   </Text>
                 </View>
                 <ScrollView style={styles.modalBody}>

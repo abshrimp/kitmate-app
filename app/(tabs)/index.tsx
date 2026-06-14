@@ -1,15 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Badge, Button, Card, EmptyState, IconTile, ListItem, Screen, Section, type IoniconsName } from '@/components/ui';
 import { parseDateLocal, subjectMatchesAny } from '@/features/cancellations/feed';
 import { useCancellationFeed } from '@/features/cancellations/useCancellationFeed';
 import { useMyCourseNames } from '@/features/cancellations/useMyCourseNames';
 import { formatTime } from '@/features/assignments/format';
+import { formatRemaining } from '@/features/assignments/remaining';
 import { useAssignments } from '@/features/assignments/useAssignments';
-import { useI18n, type I18n } from '@/i18n';
+import { useI18n } from '@/i18n';
 import { useAuth } from '@/store/auth';
 import { useTheme } from '@/theme';
 import type { AssignmentEvent, CancellationNotice, LectureNotice } from '@/types';
@@ -37,16 +38,6 @@ const QUICK_LINKS: { key: string; icon: IoniconsName; tone: 'primary' | 'accent'
   { key: 'home.quickRequirements', icon: 'school-outline', tone: 'primary', route: '/requirements' },
   { key: 'home.quickMap', icon: 'map-outline', tone: 'accent', route: '/map' },
 ];
-
-function remainingLabel(timesortSec: number, nowMs: number, t: I18n['t']): string {
-  const diff = timesortSec * 1000 - nowMs;
-  if (diff <= 0) return t('home.overdue');
-  const minutes = Math.floor(diff / 60_000);
-  if (minutes < 60) return t('home.remainingMinutes', { n: Math.max(1, minutes) });
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return t('home.remainingHours', { n: hours });
-  return t('home.remainingDays', { n: Math.floor(hours / 24) });
-}
 
 /** 休講通知 / 授業関連連絡 を表示順にそろえた共通の型 */
 type FeedItem =
@@ -200,10 +191,14 @@ function AssignmentRow({
         </Text>
         <View style={styles.rowMeta}>
           <Text style={[styles.rowDue, { color: dueColor }]}>
-            {t('home.dueAt', { time: formatTime(event.timesort) })}
+            {t('home.dueOn', {
+              m: new Date(event.timesort * 1000).getMonth() + 1,
+              d: new Date(event.timesort * 1000).getDate(),
+              time: formatTime(event.timesort),
+            })}
           </Text>
           <Text style={[styles.rowRemaining, { color: remainColor }]}>
-            {remainingLabel(event.timesort, now, t)}
+            {formatRemaining(event.timesort, now, t, 'home.overdue')}
           </Text>
         </View>
       </View>
@@ -216,8 +211,9 @@ function AssignmentRow({
 function NoticesPreview({ onSeeAll }: { onSeeAll: () => void }) {
   const { t } = useI18n();
   const { colors } = useTheme();
-  const { feed } = useCancellationFeed();
+  const { feed, status } = useCancellationFeed();
   const { names: myCourseNames } = useMyCourseNames();
+  const loading = feed === null && status === 'loading';
 
   const items = useMemo<FeedItem[]>(() => {
     if (feed === null) return [];
@@ -259,7 +255,14 @@ function NoticesPreview({ onSeeAll }: { onSeeAll: () => void }) {
         ) : undefined
       }
     >
-      {items.length === 0 ? (
+      {loading ? (
+        <Card style={styles.loadingCard}>
+          <ActivityIndicator size="small" color={colors.primary} />
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+            {t('common.loading')}
+          </Text>
+        </Card>
+      ) : items.length === 0 ? (
         <Card>
           <EmptyState icon="sunny-outline" title={t('home.noticesEmpty')} />
         </Card>
@@ -340,6 +343,15 @@ const styles = StyleSheet.create({
   promptText: {
     fontSize: 14,
     lineHeight: 20,
+  },
+  loadingCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 18,
+  },
+  loadingText: {
+    fontSize: 14,
   },
   separator: {
     height: StyleSheet.hairlineWidth,
