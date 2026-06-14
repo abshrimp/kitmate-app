@@ -14,10 +14,9 @@ import {
   type SelectModalOption,
 } from '@/components/ui';
 import { cancelAssignmentNotifications } from '@/features/assignments/notifications';
-import { confirmAsync, showAlert } from '@/features/settings/dialogs';
+import { showAlert } from '@/features/settings/dialogs';
 import { NotifyTimingPicker } from '@/features/settings/NotifyTimingPicker';
 import { PushSetupError, updatePushSubscription } from '@/features/settings/push';
-import { useTimetable } from '@/features/timetable/store';
 import { useI18n } from '@/i18n';
 import { currentAcademicYear, gradeOf } from '@/lib/terms';
 import { useSettings, type TabKey } from '@/store/settings';
@@ -196,26 +195,6 @@ export default function SettingsScreen() {
     setPushBusy(false);
   }
 
-  async function handleDeleteAll(): Promise<void> {
-    const first = await confirmAsync({
-      title: t('settings.deleteConfirmTitle1'),
-      message: t('settings.deleteConfirmMessage1'),
-      confirmLabel: t('common.delete'),
-      cancelLabel: t('common.cancel'),
-      destructive: true,
-    });
-    if (!first) return;
-    const second = await confirmAsync({
-      title: t('settings.deleteConfirmTitle2'),
-      message: t('settings.deleteConfirmMessage2'),
-      confirmLabel: t('common.delete'),
-      cancelLabel: t('common.cancel'),
-      destructive: true,
-    });
-    if (!second) return;
-    useTimetable.getState().replaceAll([]);
-    showAlert(t('settings.deletedTitle'), t('settings.deletedMessage'));
-  }
 
   return (
     <Screen title={t('common.settings')}>
@@ -280,37 +259,6 @@ export default function SettingsScreen() {
       {/* ===== 表示 ===== */}
       <Section title={t('settings.sectionDisplay')}>
         <Card>
-          <SettingRow
-            title={t('settings.showOtherProgram')}
-            right={
-              <Switch
-                {...switchColors}
-                value={settings.showOtherProgram}
-                onValueChange={(v) => settings.set('showOtherProgram', v)}
-              />
-            }
-          />
-          <SettingRow
-            title={t('settings.showNotAllowed')}
-            right={
-              <Switch
-                {...switchColors}
-                value={settings.showNotAllowed}
-                onValueChange={(v) => settings.set('showNotAllowed', v)}
-              />
-            }
-          />
-          <SettingRow
-            title={t('settings.showHigherGrades')}
-            subtitle={t('settings.showHigherGradesNote')}
-            right={
-              <Switch
-                {...switchColors}
-                value={settings.showHigherGrades}
-                onValueChange={(v) => settings.set('showHigherGrades', v)}
-              />
-            }
-          />
           <SelectRow
             title={t('settings.startupTab')}
             value={startupTabLabel()}
@@ -403,20 +351,6 @@ export default function SettingsScreen() {
               onChange={(v) => settings.set('language', v as 'system' | 'ja' | 'en')}
             />
           </View>
-        </Card>
-      </Section>
-
-      {/* ===== データ ===== */}
-      <Section title={t('settings.sectionData')}>
-        <Card>
-          <ListItem
-            icon="trash-outline"
-            destructive
-            title={t('settings.deleteAllTimetable')}
-            onPress={() => {
-              void handleDeleteAll();
-            }}
-          />
         </Card>
       </Section>
 

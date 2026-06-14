@@ -13,6 +13,9 @@ export const timetableI18n = {
     menuCustomSubtitle: '一覧にない講義や予定を自由に登録',
     menuShare: '時間割を共有',
     menuShareSubtitle: '表示中の学期の時間割をリンクで共有',
+    menuSettings: '時間割の設定',
+    menuSettingsSubtitle: '講義選択の表示オプション・データ削除',
+    settingsTitle: '時間割の設定',
 
     syncSynced: '同期済み',
     syncSyncing: '同期中…',
@@ -135,6 +138,9 @@ export const timetableI18n = {
     menuCustomSubtitle: 'Register a course or event not in the catalog',
     menuShare: 'Share timetable',
     menuShareSubtitle: 'Share the displayed term via a link',
+    menuSettings: 'Timetable settings',
+    menuSettingsSubtitle: 'Course-picker display options & data',
+    settingsTitle: 'Timetable Settings',
 
     syncSynced: 'Synced',
     syncSyncing: 'Syncing…',

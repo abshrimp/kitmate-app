@@ -294,6 +294,15 @@ export default function TimetableScreen() {
                 void startShare();
               }}
             />
+            <ListItem
+              icon="settings-outline"
+              title={t('timetable.menuSettings')}
+              subtitle={t('timetable.menuSettingsSubtitle')}
+              onPress={() => {
+                setMenuVisible(false);
+                router.push('/timetable/settings');
+              }}
+            />
           </Pressable>
         </Pressable>
       </Modal>

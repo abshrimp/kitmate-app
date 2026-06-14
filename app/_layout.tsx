@@ -40,6 +40,7 @@ function RootNavigator() {
         <Stack.Screen name="timetable/picker" options={{ presentation: 'modal' }} />
         <Stack.Screen name="timetable/custom" options={{ presentation: 'modal' }} />
         <Stack.Screen name="timetable/bulk" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="timetable/settings" options={{ presentation: 'modal' }} />
       </Stack>
     </NavigationThemeProvider>
   );
