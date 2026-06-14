@@ -45,7 +45,7 @@
       "reactCompiler": true
     },
     "extra": {
-      "apiBaseUrl": "http://localhost:8787"
+      "apiBaseUrl": "https://api.kitmate.jp"
     }
   }
 }
