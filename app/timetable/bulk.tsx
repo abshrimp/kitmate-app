@@ -136,7 +136,7 @@ export default function TimetableBulkScreen() {
 
   if (profileIncomplete) {
     return (
-      <Screen title={t('timetable.bulkTitle')} back={false}>
+      <Screen title={t('timetable.bulkTitle')} close>
         <EmptyState
           icon="person-circle-outline"
           title={t('timetable.bulkNeedProfile')}
@@ -158,7 +158,7 @@ export default function TimetableBulkScreen() {
     viewTerm === 'first' ? t('common.semesterFirst') : t('common.semesterSecond');
 
   return (
-    <Screen title={t('timetable.bulkTitle')}>
+    <Screen title={t('timetable.bulkTitle')} close>
       <Text style={[styles.description, { color: colors.textSecondary }]}>
         {t('timetable.bulkDescription', {
           year: t('common.year', { y: viewYear }),

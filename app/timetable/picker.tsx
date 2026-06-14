@@ -186,7 +186,7 @@ export default function TimetablePickerScreen() {
       title={intensive ? t('timetable.pickerIntensiveTitle') : t('timetable.pickerTitle')}
       scroll={false}
       padded={false}
-      back={false}
+      close
     >
       <View style={styles.top}>
         {contextLabel !== undefined && (

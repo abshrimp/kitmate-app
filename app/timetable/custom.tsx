@@ -111,7 +111,7 @@ export default function TimetableCustomScreen() {
   };
 
   return (
-    <Screen title={t('timetable.customTitle')} back={false}>
+    <Screen title={t('timetable.customTitle')} close>
       <TextField
         label={t('timetable.customName')}
         value={name}

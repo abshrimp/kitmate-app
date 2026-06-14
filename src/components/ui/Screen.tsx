@@ -18,6 +18,8 @@ export interface ScreenProps {
    * タブのルート画面 (最寄りのナビゲータがタブ) では出ない。
    */
   back?: boolean;
+  /** モーダル表示の画面用。左上に閉じる(×)ボタンを出す (back より優先)。 */
+  close?: boolean;
 }
 
 /**
@@ -45,12 +47,20 @@ function useCanGoBackInStack(): boolean {
 }
 
 /** SafeArea + 大見出しヘッダ付きの画面コンテナ */
-export function Screen({ title, children, scroll = true, padded = true, right, back }: ScreenProps) {
+export function Screen({
+  title,
+  children,
+  scroll = true,
+  padded = true,
+  right,
+  back,
+  close = false,
+}: ScreenProps) {
   const { colors } = useTheme();
   const { t } = useI18n();
   const navigation = useNavigation();
   const canGoBack = useCanGoBackInStack();
-  const showBack = back ?? canGoBack;
+  const showBack = !close && (back ?? canGoBack);
   return (
     <SafeAreaView
       style={[styles.root, { backgroundColor: colors.background }]}
@@ -58,6 +68,17 @@ export function Screen({ title, children, scroll = true, padded = true, right, b
     >
       {title !== undefined && (
         <View style={styles.header}>
+          {close && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('common.close')}
+              onPress={() => navigation.goBack()}
+              hitSlop={8}
+              style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
+            >
+              <Ionicons name="close" size={26} color={colors.primary} />
+            </Pressable>
+          )}
           {showBack && (
             <Pressable
               accessibilityRole="button"
