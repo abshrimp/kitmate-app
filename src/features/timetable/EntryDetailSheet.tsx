@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { ENTRY_COLOR_PRESETS, withAlpha } from './colors';
 import { confirmAsync } from './confirm';
@@ -134,16 +134,33 @@ export function EntryDetailSheet({ entry, course, onClose }: EntryDetailSheetPro
             {room !== undefined && room !== '' && (
               <InfoRow icon="location-outline" label={t('timetable.detailRoom')} value={room} />
             )}
-            {course?.classFormat !== undefined && course.classFormat !== '' && (
-              <InfoRow
-                icon="easel-outline"
-                label={t('timetable.detailFormat')}
-                value={course.classFormat}
-              />
-            )}
             {memo !== undefined && memo !== '' && (
               <InfoRow icon="document-text-outline" label={t('timetable.detailMemo')} value={memo} />
             )}
+
+            {/* 単位数に含めない (要件計算から除外) */}
+            <View style={[styles.toggleRow, { borderTopColor: colors.border }]}>
+              <Ionicons
+                name="calculator-outline"
+                size={16}
+                color={colors.textSecondary}
+                style={styles.infoIcon}
+              />
+              <View style={styles.toggleText}>
+                <Text style={[styles.toggleLabel, { color: colors.text }]}>
+                  {t('timetable.excludeFromCredits')}
+                </Text>
+                <Text style={[styles.toggleSub, { color: colors.textSecondary }]}>
+                  {t('timetable.excludeFromCreditsNote')}
+                </Text>
+              </View>
+              <Switch
+                value={entry.excludeFromCredits ?? false}
+                onValueChange={(v) => updateEntry(entry.id, { excludeFromCredits: v })}
+                trackColor={{ true: colors.primary, false: colors.cardAlt }}
+                thumbColor={colors.card}
+              />
+            </View>
 
             {/* 色変更 */}
             <Text style={[styles.colorTitle, { color: colors.textSecondary }]}>
@@ -258,6 +275,25 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontWeight: '500',
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingTop: 12,
+    marginTop: 6,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  toggleText: {
+    flex: 1,
+    gap: 2,
+  },
+  toggleLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  toggleSub: {
+    fontSize: 12,
   },
   colorTitle: {
     fontSize: 13,

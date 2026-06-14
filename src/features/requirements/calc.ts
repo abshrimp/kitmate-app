@@ -94,6 +94,7 @@ export function aggregateCredits(
   };
 
   for (const entry of entries) {
+    if (entry.excludeFromCredits === true) continue; // 「単位に含めない」指定は集計対象外
     if (entry.courseId !== undefined) {
       if (seenCourseIds.has(entry.courseId)) continue;
       seenCourseIds.add(entry.courseId);
