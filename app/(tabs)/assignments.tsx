@@ -14,7 +14,7 @@ import {
   View,
 } from 'react-native';
 
-import { Badge, Button, EmptyState, Screen, type IoniconsName } from '@/components/ui';
+import { Button, EmptyState, Screen } from '@/components/ui';
 import { calendarDaysFrom, formatTime, startOfDay, stripHtml } from '@/features/assignments/format';
 import { useAssignments } from '@/features/assignments/useAssignments';
 import { useI18n, type I18n } from '@/i18n';
@@ -36,14 +36,19 @@ function dateLabel(d: Date, t: I18n['t']): string {
   });
 }
 
+/** 締切までの残り時間を日・時間・分の複合で表示 (例「2日3時間20分」)。 */
 function remainingLabel(timesortSec: number, nowMs: number, t: I18n['t']): string {
   const diff = timesortSec * 1000 - nowMs;
   if (diff <= 0) return t('assignments.overdue');
-  const minutes = Math.floor(diff / 60_000);
-  if (minutes < 60) return t('assignments.remainingMinutes', { n: Math.max(1, minutes) });
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return t('assignments.remainingHours', { n: hours });
-  return t('assignments.remainingDays', { n: Math.floor(hours / 24) });
+  const totalMin = Math.floor(diff / 60_000);
+  const days = Math.floor(totalMin / 1440);
+  const hours = Math.floor((totalMin % 1440) / 60);
+  const mins = totalMin % 60;
+  const parts: string[] = [];
+  if (days > 0) parts.push(t('assignments.unitDay', { n: days }));
+  if (hours > 0) parts.push(t('assignments.unitHour', { n: hours }));
+  if (mins > 0 || parts.length === 0) parts.push(t('assignments.unitMinute', { n: mins }));
+  return t('assignments.remainingPrefix') + parts.join(t('assignments.remainingSeparator'));
 }
 
 export default function AssignmentsScreen() {
@@ -79,14 +84,6 @@ export default function AssignmentsScreen() {
     }
     return [...map.values()];
   }, [events, t]);
-
-  const moduleBadge = (modulename: string): { label: string; color: string; icon: IoniconsName } => {
-    if (modulename === 'assign')
-      return { label: t('assignments.badgeAssign'), color: colors.primary, icon: 'document-text-outline' };
-    if (modulename === 'quiz')
-      return { label: t('assignments.badgeQuiz'), color: colors.accent, icon: 'help-circle-outline' };
-    return { label: modulename, color: colors.textSecondary, icon: 'cube-outline' };
-  };
 
   const openInMoodle = (event: AssignmentEvent) => {
     Linking.openURL(event.actionUrl ?? event.url).catch((e) => {
@@ -207,7 +204,6 @@ export default function AssignmentsScreen() {
           </View>
         )}
         renderItem={({ item }) => {
-          const badge = moduleBadge(item.modulename);
           const dueColor = item.overdue ? colors.danger : colors.textSecondary;
           const remainColor = item.overdue ? colors.danger : colors.primary;
           return (
@@ -226,7 +222,6 @@ export default function AssignmentsScreen() {
                 {item.courseFullname}
               </Text>
               <View style={styles.itemMeta}>
-                <Badge label={badge.label} color={badge.color} icon={badge.icon} />
                 <Text style={[styles.itemDue, { color: dueColor }]}>
                   {t('assignments.dueAt', { time: formatTime(item.timesort) })}
                 </Text>
@@ -270,11 +265,6 @@ export default function AssignmentsScreen() {
                   {selected.courseFullname}
                 </Text>
                 <View style={styles.modalMeta}>
-                  <Badge
-                    label={moduleBadge(selected.modulename).label}
-                    color={moduleBadge(selected.modulename).color}
-                    icon={moduleBadge(selected.modulename).icon}
-                  />
                   <Text
                     style={[
                       styles.modalDue,
