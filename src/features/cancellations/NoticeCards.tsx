@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import {
   dayLabelI18nKey,
@@ -31,6 +32,29 @@ function localizedPeriod(periodLabel: string, t: I18n['t']): string {
 
 function joinInstructors(instructors: readonly string[], t: I18n['t']): string {
   return instructors.join(t('cancellations.instructorSeparator'));
+}
+
+/** 説明(remarks / message)を開閉トグルで表示する。空なら何も描画しない。 */
+function CollapsibleBody({ text }: { text: string }) {
+  const { t } = useI18n();
+  const { colors } = useTheme();
+  const [open, setOpen] = useState(false);
+  if (text === '') return null;
+  return (
+    <View style={styles.bodyBlock}>
+      <Pressable onPress={() => setOpen((v) => !v)} style={styles.bodyToggle} hitSlop={6}>
+        <Ionicons
+          name={open ? 'chevron-up' : 'chevron-down'}
+          size={16}
+          color={colors.textSecondary}
+        />
+        <Text style={[styles.bodyToggleText, { color: colors.textSecondary }]}>
+          {open ? t('cancellations.hideDetail') : t('cancellations.showDetail')}
+        </Text>
+      </Pressable>
+      {open && <Text style={[styles.body, { color: colors.text }]}>{text}</Text>}
+    </View>
+  );
 }
 
 // ===== 休講通知カード =====
@@ -68,9 +92,7 @@ export function CancellationCard({ item }: { item: CancellationNotice }) {
           {t('cancellations.cancelledLine', { when })}
         </Text>
       </View>
-      {item.remarks !== '' && (
-        <Text style={[styles.body, { color: colors.text }]}>{item.remarks}</Text>
-      )}
+      <CollapsibleBody text={item.remarks} />
       <View style={styles.footerRow}>
         {item.facultyLabel !== '' && (
           <Text style={[styles.footerText, { color: colors.textSecondary }]} numberOfLines={1}>
@@ -136,9 +158,7 @@ export function LectureNoticeCard({ item }: { item: LectureNotice }) {
           {instructors}
         </Text>
       )}
-      {item.message !== '' && (
-        <Text style={[styles.body, { color: colors.text }]}>{item.message}</Text>
-      )}
+      <CollapsibleBody text={item.message} />
       <View style={styles.footerRow}>
         {item.facultyLabel !== '' && (
           <Text style={[styles.footerText, { color: colors.textSecondary }]} numberOfLines={1}>
@@ -193,6 +213,20 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '800',
     letterSpacing: 0.3,
+  },
+  bodyBlock: {
+    gap: 6,
+  },
+  bodyToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    alignSelf: 'flex-start',
+    paddingVertical: 2,
+  },
+  bodyToggleText: {
+    fontSize: 13,
+    fontWeight: '600',
   },
   body: {
     fontSize: 14,
