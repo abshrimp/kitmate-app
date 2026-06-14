@@ -1,7 +1,5 @@
 import Constants from 'expo-constants';
 
-import coursesSampleJson from '@/data/courses.sample.json';
-import requirementsSampleJson from '@/data/requirements.sample.json';
 import type {
   CancellationFeed,
   Course,
@@ -15,9 +13,6 @@ import type {
 
 const extra = (Constants.expoConfig?.extra ?? {}) as { apiBaseUrl?: string };
 export const API_BASE_URL: string = extra.apiBaseUrl ?? 'http://localhost:8787';
-
-const coursesSample = coursesSampleJson as unknown as Course[];
-const requirementsSample = requirementsSampleJson as unknown as RequirementSet[];
 
 /** サーバが non-2xx を返したときに投げるエラー (ネットワーク失敗とは区別する) */
 export class ApiError extends Error {
@@ -43,10 +38,6 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
     throw new ApiError(res.status, `API request failed: ${res.status} ${path}`);
   }
   return (await res.json()) as T;
-}
-
-function isNetworkFailure(e: unknown): boolean {
-  return !(e instanceof ApiError);
 }
 
 // ===== health =====
@@ -80,47 +71,14 @@ function courseQueryString(query: CourseQuery): string {
   return s === '' ? '' : `?${s}`;
 }
 
-function matchesQuery(course: Course, query: CourseQuery): boolean {
-  if (query.q !== undefined && query.q !== '') {
-    const q = query.q.toLowerCase();
-    const hit =
-      course.name.toLowerCase().includes(q) ||
-      course.subjectNumber.toLowerCase().includes(q) ||
-      course.instructors.some((i) => i.toLowerCase().includes(q));
-    if (!hit) return false;
-  }
-  if (query.day !== undefined && !course.slots.some((s) => s.day === query.day)) return false;
-  if (query.period !== undefined && !course.slots.some((s) => s.period === query.period)) return false;
-  if (query.intensive !== undefined && course.intensive !== query.intensive) return false;
-  if (query.grade !== undefined && course.targetGrade !== query.grade) return false;
-  if (query.term !== undefined && course.term !== query.term) return false;
-  return true;
-}
-
-/** 講義検索。ネットワーク失敗時はバンドル内サンプルへフォールバック。 */
+/** 講義検索。取得失敗時はエラーを伝播する (フォールバックなし)。 */
 export async function fetchCourses(query: CourseQuery = {}): Promise<Course[]> {
-  try {
-    return await apiFetch<Course[]>(`/api/courses${courseQueryString(query)}`);
-  } catch (e) {
-    if (!isNetworkFailure(e)) throw e;
-    console.error('fetchCourses: falling back to bundled sample data', e);
-    return coursesSample.filter((c) => matchesQuery(c, query));
-  }
+  return apiFetch<Course[]>(`/api/courses${courseQueryString(query)}`);
 }
 
-/** 講義詳細。ネットワーク失敗時はサンプルから検索 (見つからなければ元のエラーを throw)。 */
+/** 講義詳細。取得失敗時はエラーを伝播する (フォールバックなし)。 */
 export async function fetchCourse(id: string): Promise<Course> {
-  try {
-    return await apiFetch<Course>(`/api/courses/${encodeURIComponent(id)}`);
-  } catch (e) {
-    if (!isNetworkFailure(e)) throw e;
-    const found = coursesSample.find((c) => c.id === id);
-    if (found) {
-      console.error('fetchCourse: falling back to bundled sample data', e);
-      return found;
-    }
-    throw e;
-  }
+  return apiFetch<Course>(`/api/courses/${encodeURIComponent(id)}`);
 }
 
 // ===== requirements =====
@@ -130,29 +88,14 @@ export interface RequirementsResponse {
   research_start: RequirementSet;
 }
 
-/** 要件取得。ネットワーク失敗時はバンドル内サンプルへフォールバック。 */
+/** 要件取得。取得失敗時はエラーを伝播する (フォールバックなし)。 */
 export async function fetchRequirements(
   admissionYear: number,
   variantKey: string,
 ): Promise<RequirementsResponse> {
-  try {
-    return await apiFetch<RequirementsResponse>(
-      `/api/requirements/${encodeURIComponent(String(admissionYear))}/${encodeURIComponent(variantKey)}`,
-    );
-  } catch (e) {
-    if (!isNetworkFailure(e)) throw e;
-    const graduation = requirementsSample.find(
-      (r) => r.admissionYear === admissionYear && r.variantKey === variantKey && r.kind === 'graduation',
-    );
-    const researchStart = requirementsSample.find(
-      (r) => r.admissionYear === admissionYear && r.variantKey === variantKey && r.kind === 'research_start',
-    );
-    if (graduation && researchStart) {
-      console.error('fetchRequirements: falling back to bundled sample data', e);
-      return { graduation, research_start: researchStart };
-    }
-    throw e;
-  }
+  return apiFetch<RequirementsResponse>(
+    `/api/requirements/${encodeURIComponent(String(admissionYear))}/${encodeURIComponent(variantKey)}`,
+  );
 }
 
 // ===== cancellations =====

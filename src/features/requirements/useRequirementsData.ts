@@ -25,8 +25,7 @@ interface LoadedResult {
 
 /**
  * 要件セットと講義マスタを読み込む。
- * api.fetchCourses / api.fetchRequirements はネットワーク失敗時に
- * バンドル内サンプルへフォールバックする (lib/api 側の実装)。
+ * 取得失敗時はフォールバックせず failed 状態にする (lib/api はエラーを伝播する)。
  */
 export function useRequirementsData(
   admissionYear: number,
