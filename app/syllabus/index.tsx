@@ -1,0 +1,226 @@
+import { router } from 'expo-router';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
+
+import { Button, EmptyState, Screen, SegmentedControl, TextField } from '@/components/ui';
+import { CourseListItem } from '@/features/syllabus/CourseListItem';
+import { semesterOf } from '@/features/syllabus/lib';
+import { useI18n } from '@/i18n';
+import { fetchCourses } from '@/lib/api';
+import { useTheme } from '@/theme';
+import type { Course, Day, Semester } from '@/types';
+
+type SemesterFilter = 'all' | Semester;
+type GradeFilter = 'all' | '1' | '2' | '3' | '4';
+type DayFilter = 'all' | Day;
+
+const DAY_VALUES: Day[] = ['mon', 'tue', 'wed', 'thu', 'fri'];
+const DAY_LABEL_KEYS: Record<Day, string> = {
+  mon: 'common.dayMon',
+  tue: 'common.dayTue',
+  wed: 'common.dayWed',
+  thu: 'common.dayThu',
+  fri: 'common.dayFri',
+};
+
+export default function SyllabusSearchScreen() {
+  const { t } = useI18n();
+  const { colors } = useTheme();
+
+  const [keyword, setKeyword] = useState('');
+  const [semester, setSemester] = useState<SemesterFilter>('all');
+  const [grade, setGrade] = useState<GradeFilter>('all');
+  const [day, setDay] = useState<DayFilter>('all');
+
+  const [courses, setCourses] = useState<Course[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+  const requestSeq = useRef(0);
+
+  useEffect(() => {
+    const seq = ++requestSeq.current;
+    setLoading(true);
+    setFailed(false);
+    const timer = setTimeout(() => {
+      const q = keyword.trim();
+      fetchCourses({
+        ...(q !== '' ? { q } : {}),
+        ...(grade !== 'all' ? { grade: Number(grade) } : {}),
+        ...(day !== 'all' ? { day } : {}),
+      })
+        .then((data) => {
+          if (requestSeq.current !== seq) return;
+          setCourses(data);
+          setLoading(false);
+        })
+        .catch((e: unknown) => {
+          if (requestSeq.current !== seq) return;
+          console.error('syllabus search failed', e);
+          setFailed(true);
+          setLoading(false);
+        });
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [keyword, grade, day, reloadKey]);
+
+  // 学期はクォーター・通年を内包させたいので API ではなくクライアント側で絞り込む
+  const visibleCourses = useMemo(() => {
+    if (courses === null) return [];
+    if (semester === 'all') return courses;
+    return courses.filter((c) => {
+      const s = semesterOf(c.term);
+      return s === null || s === semester;
+    });
+  }, [courses, semester]);
+
+  const semesterOptions = [
+    { label: t('syllabus.all'), value: 'all' },
+    { label: t('common.semesterFirst'), value: 'first' },
+    { label: t('common.semesterSecond'), value: 'second' },
+  ];
+  const gradeOptions = [
+    { label: t('syllabus.all'), value: 'all' },
+    ...(['1', '2', '3', '4'] as const).map((n) => ({ label: n, value: n })),
+  ];
+  const dayOptions = [
+    { label: t('syllabus.all'), value: 'all' },
+    ...DAY_VALUES.map((d) => ({ label: t(DAY_LABEL_KEYS[d]), value: d })),
+  ];
+
+  return (
+    <Screen title={t('syllabus.searchTitle')} scroll={false} padded={false}>
+      <View style={styles.filters}>
+        <TextField
+          value={keyword}
+          onChangeText={setKeyword}
+          placeholder={t('syllabus.searchPlaceholder')}
+        />
+        <View style={styles.filterRow}>
+          <Text style={[styles.filterLabel, { color: colors.textSecondary }]}>
+            {t('syllabus.filterSemester')}
+          </Text>
+          <View style={styles.filterControl}>
+            <SegmentedControl
+              options={semesterOptions}
+              value={semester}
+              onChange={(v) => setSemester(v as SemesterFilter)}
+            />
+          </View>
+        </View>
+        <View style={styles.filterRow}>
+          <Text style={[styles.filterLabel, { color: colors.textSecondary }]}>
+            {t('syllabus.filterGrade')}
+          </Text>
+          <View style={styles.filterControl}>
+            <SegmentedControl
+              options={gradeOptions}
+              value={grade}
+              onChange={(v) => setGrade(v as GradeFilter)}
+            />
+          </View>
+        </View>
+        <View style={styles.filterRow}>
+          <Text style={[styles.filterLabel, { color: colors.textSecondary }]}>
+            {t('syllabus.filterDay')}
+          </Text>
+          <View style={styles.filterControl}>
+            <SegmentedControl
+              options={dayOptions}
+              value={day}
+              onChange={(v) => setDay(v as DayFilter)}
+            />
+          </View>
+        </View>
+      </View>
+
+      {loading ? (
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.loadingLabel, { color: colors.textSecondary }]}>
+            {t('common.loading')}
+          </Text>
+        </View>
+      ) : failed ? (
+        <EmptyState
+          icon="cloud-offline-outline"
+          title={t('syllabus.loadFailed')}
+          message={t('common.error')}
+          action={
+            <Button
+              title={t('common.retry')}
+              variant="secondary"
+              onPress={() => setReloadKey((k) => k + 1)}
+            />
+          }
+        />
+      ) : visibleCourses.length === 0 ? (
+        <EmptyState
+          icon="search-outline"
+          title={t('syllabus.noResults')}
+          message={t('syllabus.noResultsMessage')}
+        />
+      ) : (
+        <FlatList
+          data={visibleCourses}
+          keyExtractor={(item) => item.id}
+          style={styles.list}
+          contentContainerStyle={styles.listContent}
+          keyboardShouldPersistTaps="handled"
+          ListHeaderComponent={
+            <Text style={[styles.resultCount, { color: colors.textSecondary }]}>
+              {t('syllabus.resultCount', { n: visibleCourses.length })}
+            </Text>
+          }
+          renderItem={({ item }) => (
+            <CourseListItem course={item} onPress={() => router.push(`/syllabus/${item.id}`)} />
+          )}
+        />
+      )}
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  filters: {
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+    gap: 8,
+  },
+  filterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  filterLabel: {
+    width: 36,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  filterControl: {
+    flex: 1,
+  },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  loadingLabel: {
+    fontSize: 14,
+  },
+  resultCount: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 8,
+    paddingHorizontal: 4,
+  },
+  list: {
+    flex: 1,
+  },
+  listContent: {
+    paddingHorizontal: 16,
+    paddingTop: 4,
+    paddingBottom: 32,
+  },
+});
