@@ -4,6 +4,9 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 import type { ProgramSelection } from '@/types';
 
+// メインタブの識別子 (ルート名)。'more' は起動タブ対象外。
+export type TabKey = 'index' | 'timetable' | 'assignments' | 'info' | 'links';
+
 export interface SettingsState {
   themeMode: 'system' | 'light' | 'dark';
   language: 'system' | 'ja' | 'en';
@@ -15,6 +18,8 @@ export interface SettingsState {
   assignmentNotifyHoursBefore: number;     // 締切何時間前 (default 24)
   cancellationNotifications: boolean;      // 休講 push 通知 (default false)
   lectureInfoNotifications: boolean;       // 授業関連連絡 push 通知 (default false)
+  startupTab: 'last' | TabKey;             // 起動時に開くタブ ('last' = 最後に開いていたタブ)
+  lastTab: TabKey;                         // 最後に開いていたタブ (startupTab='last' 用に記録)
   set: <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => void;
 }
 
@@ -31,6 +36,8 @@ export const useSettings = create<SettingsState>()(
       assignmentNotifyHoursBefore: 24,
       cancellationNotifications: false,
       lectureInfoNotifications: false,
+      startupTab: 'index',
+      lastTab: 'index',
       set: (key, value) => set({ [key]: value } as unknown as Partial<SettingsState>),
     }),
     {

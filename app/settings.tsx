@@ -19,7 +19,7 @@ import { PushSetupError, updatePushSubscription } from '@/features/settings/push
 import { useTimetable } from '@/features/timetable/store';
 import { useI18n } from '@/i18n';
 import { currentAcademicYear, gradeOf } from '@/lib/terms';
-import { useSettings } from '@/store/settings';
+import { useSettings, type TabKey } from '@/store/settings';
 import { useTheme } from '@/theme';
 import type { ChemCourseId, DesignArchCourseId, ProgramId } from '@/types';
 
@@ -57,7 +57,16 @@ const DA_COURSES: { id: DesignArchCourseId; labelKey: string }[] = [
   { id: 'architecture', labelKey: 'settings.daCourseArchitecture' },
 ];
 
-type ModalKind = 'year' | 'program' | 'chem' | 'da' | 'hours' | null;
+type ModalKind = 'year' | 'program' | 'chem' | 'da' | 'hours' | 'startupTab' | null;
+
+const STARTUP_TAB_OPTIONS: { value: 'last' | TabKey; labelKey: string }[] = [
+  { value: 'last', labelKey: 'settings.startupTabLast' },
+  { value: 'index', labelKey: 'common.tabHome' },
+  { value: 'timetable', labelKey: 'common.tabTimetable' },
+  { value: 'assignments', labelKey: 'common.tabAssignments' },
+  { value: 'info', labelKey: 'common.tabInfo' },
+  { value: 'links', labelKey: 'common.tabLinks' },
+];
 
 /** 現在値 + シェブロンを右側に表示する選択行 */
 function SelectRow({ title, value, onPress }: { title: string; value: string; onPress: () => void }) {
@@ -126,6 +135,10 @@ export default function SettingsScreen() {
   function programValueLabel(): string {
     if (selection === null) return t('settings.notSet');
     return t(PROGRAMS.find((p) => p.id === selection.program)?.labelKey ?? 'settings.notSet');
+  }
+  function startupTabLabel(): string {
+    const opt = STARTUP_TAB_OPTIONS.find((o) => o.value === settings.startupTab);
+    return t(opt?.labelKey ?? 'common.tabHome');
   }
 
   // ===== ハンドラ =====
@@ -291,6 +304,11 @@ export default function SettingsScreen() {
                 onValueChange={(v) => settings.set('showNotAllowed', v)}
               />
             }
+          />
+          <SelectRow
+            title={t('settings.startupTab')}
+            value={startupTabLabel()}
+            onPress={() => setModal('startupTab')}
           />
         </Card>
       </Section>
@@ -473,6 +491,16 @@ export default function SettingsScreen() {
         options={hoursOptions}
         onSelect={(v) => {
           settings.set('assignmentNotifyHoursBefore', Number(v));
+          setModal(null);
+        }}
+        onClose={() => setModal(null)}
+      />
+      <SelectModal
+        visible={modal === 'startupTab'}
+        title={t('settings.startupTab')}
+        options={STARTUP_TAB_OPTIONS.map((o) => ({ label: t(o.labelKey), value: o.value }))}
+        onSelect={(v) => {
+          settings.set('startupTab', v as 'last' | TabKey);
           setModal(null);
         }}
         onClose={() => setModal(null)}
