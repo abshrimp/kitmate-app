@@ -1,18 +1,42 @@
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Button, EmptyState, Screen, SegmentedControl, TextField } from '@/components/ui';
+import {
+  Button,
+  EmptyState,
+  Screen,
+  SegmentedControl,
+  SelectModal,
+  TextField,
+} from '@/components/ui';
 import { CourseListItem } from '@/features/syllabus/CourseListItem';
 import { semesterOf } from '@/features/syllabus/lib';
+import { categoryGroup, type CategoryGroup } from '@/features/timetable/labels';
 import { useI18n } from '@/i18n';
 import { fetchCourses } from '@/lib/api';
+import { useSettings } from '@/store/settings';
 import { useTheme } from '@/theme';
+import { categoryFor, programVariantKey } from '@/types';
 import type { Course, Day, Semester } from '@/types';
 
 type SemesterFilter = 'all' | Semester;
 type GradeFilter = 'all' | '1' | '2' | '3' | '4';
 type DayFilter = 'all' | Day;
+type CategoryFilter = 'all' | CategoryGroup;
+
+// シラバス区分フィルタの選択肢 (大分類)
+const CATEGORY_FILTERS: { value: CategoryFilter; labelKey: string }[] = [
+  { value: 'all', labelKey: 'syllabus.all' },
+  { value: 'english', labelKey: 'syllabus.catEnglish' },
+  { value: 'foundation', labelKey: 'syllabus.catFoundation' },
+  { value: 'practical', labelKey: 'syllabus.catPractical' },
+  { value: 'senior', labelKey: 'syllabus.catSenior' },
+  { value: 'intro', labelKey: 'syllabus.catIntro' },
+  { value: 'basic', labelKey: 'syllabus.catBasic' },
+  { value: 'program', labelKey: 'syllabus.catProgram' },
+];
 
 const DAY_VALUES: Day[] = ['mon', 'tue', 'wed', 'thu', 'fri'];
 const DAY_LABEL_KEYS: Record<Day, string> = {
@@ -27,10 +51,17 @@ export default function SyllabusSearchScreen() {
   const { t } = useI18n();
   const { colors } = useTheme();
 
+  const admissionYear = useSettings((s) => s.admissionYear);
+  const programSelection = useSettings((s) => s.programSelection);
+  const variantKey = programSelection === null ? null : programVariantKey(programSelection);
+  const canFilterCategory = admissionYear !== null && variantKey !== null;
+
   const [keyword, setKeyword] = useState('');
   const [semester, setSemester] = useState<SemesterFilter>('all');
   const [grade, setGrade] = useState<GradeFilter>('all');
   const [day, setDay] = useState<DayFilter>('all');
+  const [category, setCategory] = useState<CategoryFilter>('all');
+  const [categoryModal, setCategoryModal] = useState(false);
 
   const [courses, setCourses] = useState<Course[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -64,15 +95,23 @@ export default function SyllabusSearchScreen() {
     return () => clearTimeout(timer);
   }, [keyword, grade, day, reloadKey]);
 
-  // 学期はクォーター・通年を内包させたいので API ではなくクライアント側で絞り込む
+  // 学期・区分はクライアント側で絞り込む (学期はクォーター/通年を内包、区分は課程依存のため)
   const visibleCourses = useMemo(() => {
     if (courses === null) return [];
-    if (semester === 'all') return courses;
     return courses.filter((c) => {
-      const s = semesterOf(c.term);
-      return s === null || s === semester;
+      if (semester !== 'all') {
+        const s = semesterOf(c.term);
+        if (s !== null && s !== semester) return false;
+      }
+      if (category !== 'all' && admissionYear !== null && variantKey !== null) {
+        if (categoryGroup(categoryFor(c, admissionYear, variantKey)) !== category) return false;
+      }
+      return true;
     });
-  }, [courses, semester]);
+  }, [courses, semester, category, admissionYear, variantKey]);
+
+  const categoryLabelText =
+    CATEGORY_FILTERS.find((f) => f.value === category) ?? CATEGORY_FILTERS[0];
 
   const semesterOptions = [
     { label: t('syllabus.all'), value: 'all' },
@@ -132,6 +171,27 @@ export default function SyllabusSearchScreen() {
             />
           </View>
         </View>
+        {canFilterCategory && (
+          <View style={styles.filterRow}>
+            <Text style={[styles.filterLabel, { color: colors.textSecondary }]}>
+              {t('syllabus.filterCategory')}
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setCategoryModal(true)}
+              style={({ pressed }) => [
+                styles.categorySelect,
+                { borderColor: colors.border, backgroundColor: colors.card },
+                pressed && styles.pressed,
+              ]}
+            >
+              <Text style={[styles.categoryValue, { color: colors.text }]} numberOfLines={1}>
+                {t(categoryLabelText.labelKey)}
+              </Text>
+              <Ionicons name="chevron-down" size={16} color={colors.textSecondary} />
+            </Pressable>
+          </View>
+        )}
       </View>
 
       {loading ? (
@@ -177,6 +237,17 @@ export default function SyllabusSearchScreen() {
           )}
         />
       )}
+
+      <SelectModal
+        visible={categoryModal}
+        title={t('syllabus.filterCategory')}
+        options={CATEGORY_FILTERS.map((f) => ({ label: t(f.labelKey), value: f.value }))}
+        onSelect={(v) => {
+          setCategory(v as CategoryFilter);
+          setCategoryModal(false);
+        }}
+        onClose={() => setCategoryModal(false)}
+      />
     </Screen>
   );
 }
@@ -199,6 +270,25 @@ const styles = StyleSheet.create({
   },
   filterControl: {
     flex: 1,
+  },
+  categorySelect: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    gap: 8,
+  },
+  categoryValue: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  pressed: {
+    opacity: 0.7,
   },
   center: {
     flex: 1,

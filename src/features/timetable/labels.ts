@@ -69,6 +69,46 @@ export function categoryTint(category: SubjectCategory, colors: Palette): string
   }
 }
 
+// 科目区分の大分類 (シラバスの区分フィルタ・コマ色で共有)
+export type CategoryGroup =
+  | 'english' | 'foundation' | 'practical' | 'senior'
+  | 'intro' | 'basic' | 'program' | 'research' | 'other';
+
+export function categoryGroup(category: SubjectCategory): CategoryGroup {
+  switch (category) {
+    case 'english':
+      return 'english';
+    case 'liberal_foundation':
+      return 'foundation';
+    case 'liberal_practical':
+      return 'practical';
+    case 'liberal_senior':
+      return 'senior';
+    case 'intro_required':
+    case 'intro_elective_required':
+    case 'intro_elective':
+      return 'intro';
+    case 'basic_required':
+    case 'basic_elective_required':
+    case 'basic_elective':
+      return 'basic';
+    case 'program_required':
+    case 'program_elective_required':
+    case 'program_elective':
+    case 'program_elective_A':
+    case 'program_elective_B':
+    case 'program_elective_C':
+    case 'program_elective_ABC':
+    case 'program_elective_D':
+    case 'program_elective_other_course':
+      return 'program';
+    case 'graduation_research':
+      return 'research';
+    default:
+      return 'other';
+  }
+}
+
 /** 科目区分のデフォルトコマ色 (ユーザー指定の区分→色マッピング) */
 export function categoryColor(category: SubjectCategory, cat: CategoryPalette): string {
   switch (category) {
