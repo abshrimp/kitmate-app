@@ -300,6 +300,17 @@ export default function SettingsScreen() {
               />
             }
           />
+          <SettingRow
+            title={t('settings.showHigherGrades')}
+            subtitle={t('settings.showHigherGradesNote')}
+            right={
+              <Switch
+                {...switchColors}
+                value={settings.showHigherGrades}
+                onValueChange={(v) => settings.set('showHigherGrades', v)}
+              />
+            }
+          />
           <SelectRow
             title={t('settings.startupTab')}
             value={startupTabLabel()}

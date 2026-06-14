@@ -48,6 +48,8 @@ export const settingsI18n = {
     // ===== 表示 =====
     showOtherProgram: '他課程科目を選択肢に表示',
     showNotAllowed: '履修不可科目を表示',
+    showHigherGrades: '上の学年の講義を表示',
+    showHigherGradesNote: '下履修用。現在の学年より上の講義も選べます',
 
     // ===== 通知 =====
     assignmentNotifications: '課題通知',
@@ -139,6 +141,8 @@ export const settingsI18n = {
     // ===== Display =====
     showOtherProgram: 'Show other programs’ courses',
     showNotAllowed: 'Show unavailable courses',
+    showHigherGrades: 'Show higher-year courses',
+    showHigherGradesNote: 'For taking courses early; lets you pick courses above your year',
 
     // ===== Notifications =====
     assignmentNotifications: 'Assignment Reminders',

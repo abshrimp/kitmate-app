@@ -14,6 +14,7 @@ export interface SettingsState {
   programSelection: ProgramSelection | null;
   showOtherProgram: boolean;               // 他課程科目を選択肢に表示 (default false)
   showNotAllowed: boolean;                 // 履修不可を選択肢に表示 (default false)
+  showHigherGrades: boolean;               // 上の学年の講義も表示 (下履修, default false)
   assignmentNotifications: boolean;        // 課題 push 通知 (default false)
   assignmentNotifyHoursBefore: number[];   // 締切何時間前 (複数可, default [24])
   cancellationNotifications: boolean;      // 休講 push 通知 (default false)
@@ -32,6 +33,7 @@ export const useSettings = create<SettingsState>()(
       programSelection: null,
       showOtherProgram: false,
       showNotAllowed: false,
+      showHigherGrades: false,
       assignmentNotifications: false,
       assignmentNotifyHoursBefore: [24],
       cancellationNotifications: false,

@@ -52,6 +52,7 @@ export default function TimetablePickerScreen() {
   const programSelection = useSettings((s) => s.programSelection);
   const showOtherProgram = useSettings((s) => s.showOtherProgram);
   const showNotAllowed = useSettings((s) => s.showNotAllowed);
+  const showHigherGrades = useSettings((s) => s.showHigherGrades);
 
   const [query, setQuery] = useState('');
 
@@ -77,7 +78,8 @@ export default function TimetablePickerScreen() {
       if (!c.offeredThisYear) return false;
       if (!termMatches(c.term, viewTerm, quarterFilter)) return false;
       if (admissionYear !== null) {
-        if (c.targetGrade > gradeOf(admissionYear, viewYear)) return false;
+        // 下履修: showHigherGrades が false のときだけ現在学年以下に絞る
+        if (!showHigherGrades && c.targetGrade > gradeOf(admissionYear, viewYear)) return false;
         if (variantKey !== null) {
           const cat = categoryFor(c, admissionYear, variantKey);
           if (cat === 'other_program' && !showOtherProgram) return false;
@@ -93,7 +95,7 @@ export default function TimetablePickerScreen() {
       }
       return true;
     });
-  }, [courses, query, viewTerm, quarterFilter, admissionYear, viewYear, variantKey, showOtherProgram, showNotAllowed]);
+  }, [courses, query, viewTerm, quarterFilter, admissionYear, viewYear, variantKey, showOtherProgram, showNotAllowed, showHigherGrades]);
 
   const conflictName = useCallback(
     (entry: TimetableEntry): string => {
