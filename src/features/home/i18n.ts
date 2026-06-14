@@ -6,6 +6,8 @@ export const homeI18n = {
     greetingAfternoon: 'こんにちは',
     greetingEvening: 'こんばんは',
     dateFormat: '{m}月{d}日({w})',
+    accountButton: 'アカウント',
+    notificationsButton: '通知',
     // 課題セクション
     assignmentsTitle: '近い課題',
     assignmentsSeeAll: 'すべて見る',
@@ -33,6 +35,8 @@ export const homeI18n = {
     greetingAfternoon: 'Good afternoon',
     greetingEvening: 'Good evening',
     dateFormat: '{w}, {m}/{d}',
+    accountButton: 'Account',
+    notificationsButton: 'Notifications',
     assignmentsTitle: 'Upcoming',
     assignmentsSeeAll: 'See all',
     assignmentsEmpty: 'No assignments due soon',

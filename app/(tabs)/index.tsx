@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Badge, Button, Card, EmptyState, IconTile, ListItem, Screen, Section, type IoniconsName } from '@/components/ui';
+import { Badge, Button, Card, EmptyState, ListItem, Screen, Section, type IoniconsName } from '@/components/ui';
 import { parseDateLocal, subjectMatchesAny } from '@/features/cancellations/feed';
 import { useCancellationFeed } from '@/features/cancellations/useCancellationFeed';
 import { useMyCourseNames } from '@/features/cancellations/useMyCourseNames';
@@ -22,13 +22,6 @@ function greetingKey(hour: number): string {
   if (hour < 11) return 'home.greetingMorning';
   if (hour < 18) return 'home.greetingAfternoon';
   return 'home.greetingEvening';
-}
-
-/** 時間帯に応じたアイコン (文字に頼らず時間帯を示す) */
-function greetingIcon(hour: number): IoniconsName {
-  if (hour < 11) return 'partly-sunny-outline';
-  if (hour < 18) return 'sunny-outline';
-  return 'moon-outline';
 }
 
 /** クイックリンク定義 (色分けされたアイコンで一覧性を高める) */
@@ -68,7 +61,28 @@ export default function HomeScreen() {
   return (
     <Screen
       title={greeting}
-      right={<IconTile icon={greetingIcon(today.getHours())} color={colors.accent} variant="soft" />}
+      left={
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('home.accountButton')}
+          onPress={() => router.push('/login')}
+          hitSlop={8}
+          style={({ pressed }) => pressed && styles.pressed}
+        >
+          <Ionicons name="person-circle-outline" size={28} color={colors.primary} />
+        </Pressable>
+      }
+      right={
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('home.notificationsButton')}
+          onPress={() => router.push('/notifications')}
+          hitSlop={8}
+          style={({ pressed }) => pressed && styles.pressed}
+        >
+          <Ionicons name="notifications-outline" size={26} color={colors.primary} />
+        </Pressable>
+      }
     >
       <View style={styles.dateRow}>
         <Ionicons name="calendar-clear-outline" size={14} color={colors.textSecondary} />

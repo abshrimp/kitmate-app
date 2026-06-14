@@ -9,10 +9,12 @@ import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import AuthBootstrap from '@/features/auth/AuthBootstrap';
+import { useNotificationHistoryListener } from '@/features/notifications/useNotificationHistoryListener';
 import { ThemeProvider, useTheme } from '@/theme';
 
 function RootNavigator() {
   const { colors, dark } = useTheme();
+  useNotificationHistoryListener(); // 受信通知を履歴に記録
   const base = dark ? DarkTheme : DefaultTheme;
   const navigationTheme = {
     ...base,
@@ -41,6 +43,7 @@ function RootNavigator() {
         <Stack.Screen name="timetable/custom" options={{ presentation: 'modal' }} />
         <Stack.Screen name="timetable/bulk" options={{ presentation: 'modal' }} />
         <Stack.Screen name="timetable/settings" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="notifications" options={{ presentation: 'modal' }} />
       </Stack>
     </NavigationThemeProvider>
   );

@@ -7,6 +7,7 @@ import { cancellationsI18n } from '@/features/cancellations/i18n';
 import { homeI18n } from '@/features/home/i18n';
 import { linksI18n } from '@/features/links/i18n';
 import { mapI18n } from '@/features/map/i18n';
+import { notificationsI18n } from '@/features/notifications/i18n';
 import { requirementsI18n } from '@/features/requirements/i18n';
 import { settingsI18n } from '@/features/settings/i18n';
 import { syllabusI18n } from '@/features/syllabus/i18n';
@@ -31,6 +32,7 @@ const dictionaries: Record<LocaleCode, Record<string, Dict>> = {
     cancellations: cancellationsI18n.ja,
     links: linksI18n.ja,
     map: mapI18n.ja,
+    notifications: notificationsI18n.ja,
     settings: settingsI18n.ja,
   },
   en: {
@@ -44,6 +46,7 @@ const dictionaries: Record<LocaleCode, Record<string, Dict>> = {
     cancellations: cancellationsI18n.en,
     links: linksI18n.en,
     map: mapI18n.en,
+    notifications: notificationsI18n.en,
     settings: settingsI18n.en,
   },
 };

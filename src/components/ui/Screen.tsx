@@ -13,6 +13,8 @@ export interface ScreenProps {
   scroll?: boolean;
   padded?: boolean;
   right?: ReactNode;
+  /** タイトル左に置く要素 (戻る/閉じるボタンが無いときのみ表示。タブのルート画面用)。 */
+  left?: ReactNode;
   /**
    * 戻るボタンの表示。未指定なら「自分が属するスタックを戻れるとき」だけ自動表示する。
    * タブのルート画面 (最寄りのナビゲータがタブ) では出ない。
@@ -53,6 +55,7 @@ export function Screen({
   scroll = true,
   padded = true,
   right,
+  left,
   back,
   close = false,
 }: ScreenProps) {
@@ -90,6 +93,7 @@ export function Screen({
               <Ionicons name="chevron-back" size={26} color={colors.primary} />
             </Pressable>
           )}
+          {!showBack && !close && left != null && <View style={styles.headerLeft}>{left}</View>}
           <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
             {title}
           </Text>
@@ -137,6 +141,11 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
