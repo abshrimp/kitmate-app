@@ -10,6 +10,8 @@ import { useMyCourseNames } from '@/features/cancellations/useMyCourseNames';
 import { formatTime } from '@/features/assignments/format';
 import { formatRemaining } from '@/features/assignments/remaining';
 import { useAssignments } from '@/features/assignments/useAssignments';
+import { eventLabel, formatEventDate, upcomingEvents } from '@/features/home/academicCalendar';
+import { useWeather, weatherIcon } from '@/features/home/useWeather';
 import { useI18n } from '@/i18n';
 import { useAuth } from '@/store/auth';
 import { useTheme } from '@/theme';
@@ -89,9 +91,13 @@ export default function HomeScreen() {
         <Text style={[styles.dateLine, { color: colors.textSecondary }]}>{dateLine}</Text>
       </View>
 
+      <WeatherCard />
+
       <AssignmentsPreview now={now} onSeeAll={() => router.push('/assignments')} />
 
       <NoticesPreview onSeeAll={() => router.push('/info')} />
+
+      <UpcomingSchedule now={now} />
 
       <Section title={t('home.quickLinksTitle')}>
         <Card style={styles.listCard}>
@@ -331,6 +337,80 @@ function NoticeRow({ item, onPress }: { item: FeedItem; onPress: () => void }) {
   );
 }
 
+/** 京都の今日の天気カード */
+function WeatherCard() {
+  const { t } = useI18n();
+  const { colors } = useTheme();
+  const { status, data } = useWeather();
+
+  if (status === 'error' && data === null) return null; // 取得失敗かつキャッシュ無し → 非表示
+  if (data === null) {
+    return (
+      <Card style={styles.weatherCard}>
+        <ActivityIndicator size="small" color={colors.primary} />
+        <Text style={[styles.weatherTelop, { color: colors.textSecondary }]}>
+          {t('common.loading')}
+        </Text>
+      </Card>
+    );
+  }
+
+  const temps = [
+    data.tempMax !== null ? t('home.weatherMax', { n: data.tempMax }) : null,
+    data.tempMin !== null ? t('home.weatherMin', { n: data.tempMin }) : null,
+  ].filter((s): s is string => s !== null);
+
+  return (
+    <Card style={styles.weatherCard}>
+      <Ionicons name={weatherIcon(data.telop)} size={30} color={colors.accent} />
+      <View style={styles.weatherBody}>
+        <Text style={[styles.weatherTitle, { color: colors.textSecondary }]}>
+          {t('home.weatherTitle')}
+        </Text>
+        <Text style={[styles.weatherTelop, { color: colors.text }]}>{data.telop}</Text>
+      </View>
+      <View style={styles.weatherMeta}>
+        {temps.length > 0 && (
+          <Text style={[styles.weatherTemp, { color: colors.text }]}>{temps.join('  ')}</Text>
+        )}
+        {data.chanceOfRain !== null && (
+          <Text style={[styles.weatherRain, { color: colors.textSecondary }]}>
+            {t('home.weatherRain', { n: data.chanceOfRain })}
+          </Text>
+        )}
+      </View>
+    </Card>
+  );
+}
+
+/** 学年暦の今後の予定 (上位4件) */
+function UpcomingSchedule({ now }: { now: number }) {
+  const { t, locale } = useI18n();
+  const { colors } = useTheme();
+  const events = useMemo(() => upcomingEvents(now, 4), [now]);
+  if (events.length === 0) return null;
+
+  return (
+    <Section title={t('home.scheduleTitle')}>
+      <Card style={styles.listCard}>
+        {events.map((e, index) => (
+          <View key={`${e.start}-${index}`}>
+            {index > 0 && <View style={[styles.separator, { backgroundColor: colors.border }]} />}
+            <View style={styles.scheduleRow}>
+              <Text style={[styles.scheduleDate, { color: colors.primary }]}>
+                {formatEventDate(e)}
+              </Text>
+              <Text style={[styles.scheduleLabel, { color: colors.text }]} numberOfLines={2}>
+                {eventLabel(e, locale)}
+              </Text>
+            </View>
+          </View>
+        ))}
+      </Card>
+    </Section>
+  );
+}
+
 const styles = StyleSheet.create({
   dateRow: {
     flexDirection: 'row',
@@ -350,6 +430,52 @@ const styles = StyleSheet.create({
   },
   listCard: {
     paddingVertical: 4,
+  },
+  weatherCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 4,
+  },
+  weatherBody: {
+    flex: 1,
+    gap: 1,
+  },
+  weatherTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  weatherTelop: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  weatherMeta: {
+    alignItems: 'flex-end',
+    gap: 2,
+  },
+  weatherTemp: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  weatherRain: {
+    fontSize: 12,
+  },
+  scheduleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 11,
+    paddingHorizontal: 4,
+  },
+  scheduleDate: {
+    fontSize: 14,
+    fontWeight: '700',
+    minWidth: 64,
+  },
+  scheduleLabel: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '500',
   },
   promptCard: {
     gap: 12,
