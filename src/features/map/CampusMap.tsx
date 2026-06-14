@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -77,12 +77,13 @@ function RoundButton({
   );
 }
 
-export function CampusMap() {
+export function CampusMap({ focusId }: { focusId?: string }) {
   const { colors, dark } = useTheme();
   const { t, locale } = useI18n();
 
   const [container, setContainer] = useState({ w: 0, h: 0 });
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // focusId 指定時は最初からその建物を選択状態にする (詳細カードを出す)
+  const [selectedId, setSelectedId] = useState<string | null>(focusId ?? null);
   const [listVisible, setListVisible] = useState(false);
 
   const scale = useSharedValue(1);
@@ -194,6 +195,18 @@ export function CampusMap() {
     const py = offsetY + (b.y + b.h / 2) * k;
     applyView(next, next * (cw / 2 - px), next * (ch / 2 - py));
   };
+
+  // 講義室などから遷移したとき: コンテナ測定後に一度だけ対象建物へセンタリング (選択は初期値で済)
+  const focusedRef = useRef(false);
+  useEffect(() => {
+    if (focusedRef.current || focusId === undefined || cw <= 0 || ch <= 0) return;
+    const b = BUILDINGS.find((x) => x.id === focusId);
+    if (b === undefined) return;
+    focusedRef.current = true;
+    centerOn(b);
+    // centerOn は毎レンダー再生成だが focusedRef で単発化しているため依存に含めない
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusId, cw, ch]);
 
   const selected = useMemo(
     () => BUILDINGS.find((b) => b.id === selectedId) ?? null,

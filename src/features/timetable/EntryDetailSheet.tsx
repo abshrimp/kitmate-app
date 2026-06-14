@@ -6,6 +6,7 @@ import { ENTRY_COLOR_PRESETS, withAlpha } from './colors';
 import { confirmAsync } from './confirm';
 import { categoryLabel, categoryTint, dayLabel } from './labels';
 import { useTimetable } from './store';
+import { resolveBuildingFromRoom } from '@/features/map/buildings';
 import { Badge, Button } from '@/components/ui';
 import type { IoniconsName } from '@/components/ui';
 import { useI18n } from '@/i18n';
@@ -92,6 +93,14 @@ export function EntryDetailSheet({ entry, course, onClose }: EntryDetailSheetPro
     if (entry.courseId === undefined) return;
     onClose();
     router.push(`/syllabus/${entry.courseId}`);
+  };
+
+  const mapBuildingId =
+    room !== undefined && room !== '' ? resolveBuildingFromRoom(room) : null;
+  const openMap = () => {
+    if (mapBuildingId === null) return;
+    onClose();
+    router.push({ pathname: '/map', params: { building: mapBuildingId } });
   };
 
   return (
@@ -200,6 +209,14 @@ export function EntryDetailSheet({ entry, course, onClose }: EntryDetailSheetPro
             </View>
 
             <View style={styles.actions}>
+              {mapBuildingId !== null && (
+                <Button
+                  title={t('timetable.openMap')}
+                  icon="map-outline"
+                  variant="secondary"
+                  onPress={openMap}
+                />
+              )}
               {entry.courseId !== undefined && (
                 <Button
                   title={t('timetable.openSyllabus')}

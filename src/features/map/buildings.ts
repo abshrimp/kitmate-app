@@ -44,6 +44,29 @@ export const KIND_COLOR_KEY: Record<BuildingKind, keyof Palette> = {
 };
 
 /**
+ * 講義室の表記 (例「E1-501」「西1号館 101」「3号館」「0323講義室」) から建物 id を推定する。
+ * 判別できなければ null (= マップ遷移ボタンを出さない)。配置/命名は概略のためベストエフォート。
+ */
+export function resolveBuildingFromRoom(room: string): string | null {
+  const r = room.trim();
+  if (r === '') return null;
+  if (/E1\b|Ｅ1|東\s*1\s*号館|東1/i.test(r)) return 'east1';
+  if (/E2\b|Ｅ2|東\s*2\s*号館|東2/i.test(r)) return 'east2';
+  const west = r.match(/西\s*([1-9])\s*号館|西\s*([1-9])|W\s*([1-9])/i);
+  if (west) return `west${west[1] ?? west[2] ?? west[3]}`;
+  if (/図書館/.test(r)) return 'library';
+  if (/情報科学|情科/.test(r)) return 'isc';
+  if (/センターホール/.test(r)) return 'centerhall';
+  if (/生協|福利/.test(r)) return 'coop';
+  if (/60\s*周年/.test(r)) return 'anniv60';
+  if (/KIT\s*HOUSE/i.test(r)) return 'kithouse';
+  if (/体育館/.test(r)) return 'gym';
+  const bldg = r.match(/(?:^|[^西東])([123])\s*号館/);
+  if (bldg) return `bldg${bldg[1]}`;
+  return null;
+}
+
+/**
  * 松ヶ崎キャンパスの主要建物 (配置は概略。正確な縮尺・位置ではない)
  */
 export const BUILDINGS: Building[] = [
