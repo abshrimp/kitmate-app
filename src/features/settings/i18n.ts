@@ -14,6 +14,10 @@ export const settingsI18n = {
     sectionNotifications: '通知',
     sectionAppearance: '外観',
     sectionData: 'データ',
+    sectionAbout: '情報',
+    termsOfService: '利用規約',
+    privacyPolicy: 'プライバシーポリシー',
+    feedback: 'フィードバック',
 
     // ===== プロフィール =====
     admissionYear: '入学年度',
@@ -94,6 +98,10 @@ export const settingsI18n = {
     sectionNotifications: 'Notifications',
     sectionAppearance: 'Appearance',
     sectionData: 'Data',
+    sectionAbout: 'About',
+    termsOfService: 'Terms of Service',
+    privacyPolicy: 'Privacy Policy',
+    feedback: 'Feedback',
 
     // ===== Profile =====
     admissionYear: 'Admission Year',

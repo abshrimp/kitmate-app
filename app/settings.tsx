@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Linking from 'expo-linking';
 import { useState } from 'react';
 import { Platform, StyleSheet, Switch, Text, View } from 'react-native';
 
@@ -24,6 +25,16 @@ import type { ChemCourseId, DesignArchCourseId, ProgramId } from '@/types';
 
 const FIRST_ADMISSION_YEAR = 2018;
 const NOTIFY_HOURS = [1, 3, 6, 12, 24, 48];
+
+const TERMS_URL = 'https://docs.kitmate.jp/terms';
+const PRIVACY_URL = 'https://docs.kitmate.jp/privacy';
+const FEEDBACK_URL = 'https://docs.kitmate.jp/feedback';
+
+function openUrl(url: string): void {
+  Linking.openURL(url).catch((e) => {
+    console.error('Failed to open URL', url, e);
+  });
+}
 
 const PROGRAMS: { id: ProgramId; labelKey: string }[] = [
   { id: 'bio', labelKey: 'settings.programBio' },
@@ -382,6 +393,30 @@ export default function SettingsScreen() {
             onPress={() => {
               void handleDeleteAll();
             }}
+          />
+        </Card>
+      </Section>
+
+      {/* ===== 情報 ===== */}
+      <Section title={t('settings.sectionAbout')}>
+        <Card>
+          <ListItem
+            icon="document-text-outline"
+            title={t('settings.termsOfService')}
+            right={<Ionicons name="open-outline" size={18} color={colors.textSecondary} />}
+            onPress={() => openUrl(TERMS_URL)}
+          />
+          <ListItem
+            icon="shield-checkmark-outline"
+            title={t('settings.privacyPolicy')}
+            right={<Ionicons name="open-outline" size={18} color={colors.textSecondary} />}
+            onPress={() => openUrl(PRIVACY_URL)}
+          />
+          <ListItem
+            icon="chatbox-ellipses-outline"
+            title={t('settings.feedback')}
+            right={<Ionicons name="open-outline" size={18} color={colors.textSecondary} />}
+            onPress={() => openUrl(FEEDBACK_URL)}
           />
         </Card>
       </Section>
