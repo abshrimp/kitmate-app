@@ -1,6 +1,7 @@
 import type { I18n } from '@/i18n';
-import type { Palette } from '@/theme';
-import type { Course, CourseTerm, Day, Quarter, SubjectCategory } from '@/types';
+import type { CategoryPalette, Palette } from '@/theme';
+import { categoryFor } from '@/types';
+import type { Course, CourseTerm, Day, Quarter, SubjectCategory, TimetableEntry } from '@/types';
 
 const DAY_KEYS: Record<Day, string> = {
   mon: 'common.dayMon',
@@ -66,6 +67,56 @@ export function categoryTint(category: SubjectCategory, colors: Palette): string
     default:
       return colors.primary;
   }
+}
+
+/** 科目区分のデフォルトコマ色 (ユーザー指定の区分→色マッピング) */
+export function categoryColor(category: SubjectCategory, cat: CategoryPalette): string {
+  switch (category) {
+    case 'english':
+      return cat.english;
+    case 'liberal_foundation':
+      return cat.foundation;
+    case 'liberal_practical':
+      return cat.practical;
+    case 'liberal_senior':
+      return cat.senior;
+    case 'intro_required':
+    case 'intro_elective_required':
+    case 'intro_elective':
+      return cat.intro;
+    case 'basic_required':
+    case 'basic_elective_required':
+    case 'basic_elective':
+      return cat.basic;
+    case 'program_required':
+    case 'program_elective_required':
+    case 'program_elective':
+    case 'program_elective_A':
+    case 'program_elective_B':
+    case 'program_elective_C':
+    case 'program_elective_ABC':
+    case 'program_elective_D':
+    case 'program_elective_other_course':
+      return cat.program;
+    case 'graduation_research':
+      return cat.research;
+    default:
+      return cat.other;
+  }
+}
+
+/** エントリの科目区分を解決する (公式講義は入学年度・課程変種から、オリジナルは custom.category)。 */
+export function entryCategory(
+  entry: TimetableEntry,
+  course: Course | undefined,
+  admissionYear: number | null,
+  variantKey: string | null,
+): SubjectCategory {
+  if (entry.custom !== undefined) return entry.custom.category;
+  if (course !== undefined && admissionYear !== null && variantKey !== null) {
+    return categoryFor(course, admissionYear, variantKey);
+  }
+  return 'out_of_scope';
 }
 
 /** 講義の曜日・時限の短い表記 (例: 月1・木2 / Mon1, Thu2)。集中は集中表記 */

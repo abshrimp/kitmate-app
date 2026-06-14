@@ -2,11 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { withAlpha } from './colors';
-import { dayLabel } from './labels';
+import { categoryColor, dayLabel, entryCategory } from './labels';
 import type { CourseMap } from './useCourseMap';
 import { useI18n } from '@/i18n';
 import { DAYS, PERIOD_TIMES } from '@/lib/terms';
+import { useSettings } from '@/store/settings';
 import { useTheme } from '@/theme';
+import { programVariantKey } from '@/types';
 import type { Day, Period, Quarter, TimetableEntry } from '@/types';
 
 const PERIODS: Period[] = [1, 2, 3, 4, 5];
@@ -52,7 +54,17 @@ export function TimetableGrid({
   showIntensive = true,
 }: TimetableGridProps) {
   const { t } = useI18n();
-  const { colors } = useTheme();
+  const { colors, category } = useTheme();
+  const admissionYear = useSettings((s) => s.admissionYear);
+  const programSelection = useSettings((s) => s.programSelection);
+  const variantKey = programSelection === null ? null : programVariantKey(programSelection);
+
+  // コマ色: 明示色があればそれを、無ければ科目区分のデフォルト色を使う
+  const tintFor = (entry: TimetableEntry): string => {
+    if (entry.color !== undefined) return entry.color;
+    const course = entry.courseId !== undefined ? courseMap[entry.courseId] : undefined;
+    return categoryColor(entryCategory(entry, course, admissionYear, variantKey), category);
+  };
 
   const visible =
     quarter === 'all'
@@ -76,7 +88,7 @@ export function TimetableGrid({
   };
 
   const renderEntry = (entry: TimetableEntry) => {
-    const tint = entry.color ?? colors.primary;
+    const tint = tintFor(entry);
     const tag = quarterTag(entry);
     return (
       <Pressable
@@ -213,7 +225,7 @@ export function TimetableGrid({
           ) : (
             <View style={styles.intensiveList}>
               {intensives.map((entry) => {
-                const tint = entry.color ?? colors.primary;
+                const tint = tintFor(entry);
                 const tag = quarterTag(entry);
                 const room = entryRoom(entry, courseMap);
                 return (

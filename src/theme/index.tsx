@@ -9,6 +9,23 @@ export interface Palette {
   danger: string; success: string; warning: string; overlay: string;
 }
 
+// 時間割コマの科目区分デフォルト色 (英語:赤 / 基盤教養:黄 / 実践教養:緑 / 高年次:橙 /
+// 専門導入:水色 / 専門基礎:紫 / 課程専門:青 / 卒業研究:桃 / 要件外:灰)
+export interface CategoryPalette {
+  english: string; foundation: string; practical: string; senior: string;
+  intro: string; basic: string; program: string; research: string; other: string;
+}
+
+export const lightCategoryColors: CategoryPalette = {
+  english: '#E0484D', foundation: '#D9A41C', practical: '#2FA56B', senior: '#E0852E',
+  intro: '#2F9FC4', basic: '#8B5CF6', program: '#3B6FE0', research: '#E0529B', other: '#9AA0A8',
+};
+
+export const darkCategoryColors: CategoryPalette = {
+  english: '#E5736B', foundation: '#E0B450', practical: '#43C18B', senior: '#E8A24E',
+  intro: '#5FB8D6', basic: '#A78BFA', program: '#6E97E8', research: '#E87CB3', other: '#969CA5',
+};
+
 /**
  * ベースは可読性重視の中立色（白〜グレー / 読みやすい近黒テキスト）。
  * 京都工芸繊維大学のスクールカラーは「アクセント」として使う:
@@ -52,16 +69,28 @@ export const darkPalette: Palette = {
 
 export interface Theme {
   colors: Palette;
+  category: CategoryPalette;
   dark: boolean;
 }
 
-const ThemeContext = createContext<Theme>({ colors: lightPalette, dark: false });
+const ThemeContext = createContext<Theme>({
+  colors: lightPalette,
+  category: lightCategoryColors,
+  dark: false,
+});
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const systemScheme = useColorScheme();
   const themeMode = useSettings((s) => s.themeMode);
   const dark = themeMode === 'system' ? systemScheme === 'dark' : themeMode === 'dark';
-  const value = useMemo<Theme>(() => ({ colors: dark ? darkPalette : lightPalette, dark }), [dark]);
+  const value = useMemo<Theme>(
+    () => ({
+      colors: dark ? darkPalette : lightPalette,
+      category: dark ? darkCategoryColors : lightCategoryColors,
+      dark,
+    }),
+    [dark],
+  );
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
