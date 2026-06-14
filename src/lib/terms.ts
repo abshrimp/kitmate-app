@@ -35,9 +35,9 @@ export function quarterBelongsTo(q: Quarter): Semester {
 export const PERIOD_TIMES: Record<Period, { start: string; end: string }> = {
   1: { start: '8:50', end: '10:20' },
   2: { start: '10:30', end: '12:00' },
-  3: { start: '13:10', end: '14:40' },
-  4: { start: '14:50', end: '16:20' },
-  5: { start: '16:30', end: '18:00' },
+  3: { start: '12:50', end: '14:20' },
+  4: { start: '14:30', end: '16:00' },
+  5: { start: '16:10', end: '17:40' },
 };
 
 export const DAYS: Day[] = ['mon', 'tue', 'wed', 'thu', 'fri'];
