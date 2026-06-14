@@ -74,30 +74,33 @@ export async function syncAssignmentNotifications(events: AssignmentEvent[]): Pr
       });
     }
 
-    const offsetMs = assignmentNotifyHoursBefore * 3600 * 1000;
+    // 重複を除いた有効なリード時間 (時間) のリスト
+    const leadHours = [...new Set(assignmentNotifyHoursBefore)].filter((h) => h > 0);
     const now = Date.now();
     for (const event of events) {
-      const fireAt = event.timesort * 1000 - offsetMs;
-      if (fireAt <= now) continue; // 過去ならスキップ
       const due = new Date(event.timesort * 1000);
       const timeLabel = t('assignments.notifyTimeFormat', {
         m: due.getMonth() + 1,
         d: due.getDate(),
         time: formatTime(event.timesort),
       });
-      await Notifications.scheduleNotificationAsync({
-        identifier: `${ID_PREFIX}${event.id}`,
-        content: {
-          title: t('assignments.notificationTitle'),
-          body: t('assignments.notificationBody', { name: event.activityname, time: timeLabel }),
-          data: { url: event.actionUrl ?? event.url, eventId: event.id },
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.DATE,
-          date: new Date(fireAt),
-          channelId: CHANNEL_ID,
-        },
-      });
+      for (const hours of leadHours) {
+        const fireAt = event.timesort * 1000 - hours * 3600 * 1000;
+        if (fireAt <= now) continue; // 過去ならスキップ
+        await Notifications.scheduleNotificationAsync({
+          identifier: `${ID_PREFIX}${event.id}-${hours}`,
+          content: {
+            title: t('assignments.notificationTitle'),
+            body: t('assignments.notificationBody', { name: event.activityname, time: timeLabel }),
+            data: { url: event.actionUrl ?? event.url, eventId: event.id },
+          },
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.DATE,
+            date: new Date(fireAt),
+            channelId: CHANNEL_ID,
+          },
+        });
+      }
     }
   } catch (e) {
     console.error('Failed to schedule assignment notifications', e);

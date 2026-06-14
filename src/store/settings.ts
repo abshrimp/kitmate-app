@@ -15,7 +15,7 @@ export interface SettingsState {
   showOtherProgram: boolean;               // 他課程科目を選択肢に表示 (default false)
   showNotAllowed: boolean;                 // 履修不可を選択肢に表示 (default false)
   assignmentNotifications: boolean;        // 課題 push 通知 (default false)
-  assignmentNotifyHoursBefore: number;     // 締切何時間前 (default 24)
+  assignmentNotifyHoursBefore: number[];   // 締切何時間前 (複数可, default [24])
   cancellationNotifications: boolean;      // 休講 push 通知 (default false)
   lectureInfoNotifications: boolean;       // 授業関連連絡 push 通知 (default false)
   startupTab: 'last' | TabKey;             // 起動時に開くタブ ('last' = 最後に開いていたタブ)
@@ -33,7 +33,7 @@ export const useSettings = create<SettingsState>()(
       showOtherProgram: false,
       showNotAllowed: false,
       assignmentNotifications: false,
-      assignmentNotifyHoursBefore: 24,
+      assignmentNotifyHoursBefore: [24],
       cancellationNotifications: false,
       lectureInfoNotifications: false,
       startupTab: 'index',
@@ -42,8 +42,17 @@ export const useSettings = create<SettingsState>()(
     }),
     {
       name: 'kitmate-settings',
+      version: 1,
       storage: createJSONStorage(() => AsyncStorage),
       partialize: ({ set: _set, ...rest }) => rest,
+      // v0→v1: assignmentNotifyHoursBefore を number → number[] に移行
+      migrate: (persisted, version) => {
+        const s = (persisted ?? {}) as Record<string, unknown>;
+        if (version < 1 && typeof s.assignmentNotifyHoursBefore === 'number') {
+          s.assignmentNotifyHoursBefore = [s.assignmentNotifyHoursBefore];
+        }
+        return s as unknown as SettingsState;
+      },
     },
   ),
 );

@@ -15,6 +15,7 @@ import {
 } from '@/components/ui';
 import { cancelAssignmentNotifications } from '@/features/assignments/notifications';
 import { confirmAsync, showAlert } from '@/features/settings/dialogs';
+import { NotifyTimingPicker } from '@/features/settings/NotifyTimingPicker';
 import { PushSetupError, updatePushSubscription } from '@/features/settings/push';
 import { useTimetable } from '@/features/timetable/store';
 import { useI18n } from '@/i18n';
@@ -24,7 +25,6 @@ import { useTheme } from '@/theme';
 import type { ChemCourseId, DesignArchCourseId, ProgramId } from '@/types';
 
 const FIRST_ADMISSION_YEAR = 2018;
-const NOTIFY_HOURS = [1, 3, 6, 12, 24, 48];
 
 const TERMS_URL = 'https://docs.kitmate.jp/terms';
 const PRIVACY_URL = 'https://docs.kitmate.jp/privacy';
@@ -57,7 +57,7 @@ const DA_COURSES: { id: DesignArchCourseId; labelKey: string }[] = [
   { id: 'architecture', labelKey: 'settings.daCourseArchitecture' },
 ];
 
-type ModalKind = 'year' | 'program' | 'chem' | 'da' | 'hours' | 'startupTab' | null;
+type ModalKind = 'year' | 'program' | 'chem' | 'da' | 'startupTab' | null;
 
 const STARTUP_TAB_OPTIONS: { value: 'last' | TabKey; labelKey: string }[] = [
   { value: 'last', labelKey: 'settings.startupTabLast' },
@@ -119,11 +119,6 @@ export default function SettingsScreen() {
     label: t(c.labelKey),
     value: c.id,
   }));
-  const hoursOptions: SelectModalOption[] = NOTIFY_HOURS.map((h) => ({
-    label: t('settings.hoursBefore', { n: h }),
-    value: String(h),
-  }));
-
   // ===== 表示値 =====
 
   function chemCourseLabel(id: ChemCourseId): string {
@@ -332,10 +327,9 @@ export default function SettingsScreen() {
             }
           />
           {settings.assignmentNotifications && (
-            <SelectRow
-              title={t('settings.notifyTiming')}
-              value={t('settings.hoursBefore', { n: settings.assignmentNotifyHoursBefore })}
-              onPress={() => setModal('hours')}
+            <NotifyTimingPicker
+              value={settings.assignmentNotifyHoursBefore}
+              onChange={(v) => settings.set('assignmentNotifyHoursBefore', v)}
             />
           )}
           <SettingRow
@@ -481,16 +475,6 @@ export default function SettingsScreen() {
             daCourse: v as DesignArchCourseId,
             tech: selection?.tech ?? false,
           });
-          setModal(null);
-        }}
-        onClose={() => setModal(null)}
-      />
-      <SelectModal
-        visible={modal === 'hours'}
-        title={t('settings.selectNotifyTiming')}
-        options={hoursOptions}
-        onSelect={(v) => {
-          settings.set('assignmentNotifyHoursBefore', Number(v));
           setModal(null);
         }}
         onClose={() => setModal(null)}
