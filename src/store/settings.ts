@@ -44,14 +44,17 @@ export const useSettings = create<SettingsState>()(
     }),
     {
       name: 'kitmate-settings',
-      version: 1,
+      version: 2,
       storage: createJSONStorage(() => AsyncStorage),
       partialize: ({ set: _set, ...rest }) => rest,
-      // v0→v1: assignmentNotifyHoursBefore を number → number[] に移行
-      migrate: (persisted, version) => {
+      // assignmentNotifyHoursBefore を number(旧) → number[] へ確実に正規化する
+      migrate: (persisted) => {
         const s = (persisted ?? {}) as Record<string, unknown>;
-        if (version < 1 && typeof s.assignmentNotifyHoursBefore === 'number') {
-          s.assignmentNotifyHoursBefore = [s.assignmentNotifyHoursBefore];
+        if (!Array.isArray(s.assignmentNotifyHoursBefore)) {
+          s.assignmentNotifyHoursBefore =
+            typeof s.assignmentNotifyHoursBefore === 'number'
+              ? [s.assignmentNotifyHoursBefore]
+              : [24];
         }
         return s as unknown as SettingsState;
       },

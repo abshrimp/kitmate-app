@@ -74,8 +74,11 @@ export async function syncAssignmentNotifications(events: AssignmentEvent[]): Pr
       });
     }
 
-    // 重複を除いた有効なリード時間 (時間) のリスト
-    const leadHours = [...new Set(assignmentNotifyHoursBefore)].filter((h) => h > 0);
+    // 重複を除いた有効なリード時間 (時間) のリスト (旧 number 形式も配列に正規化)
+    const rawLeads = assignmentNotifyHoursBefore as number[] | number;
+    const leadHours = [...new Set(Array.isArray(rawLeads) ? rawLeads : [rawLeads])].filter(
+      (h) => h > 0,
+    );
     const now = Date.now();
     for (const event of events) {
       const due = new Date(event.timesort * 1000);
