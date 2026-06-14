@@ -11,6 +11,8 @@ import {
 import { getString, remove, setString } from '@/lib/storage';
 import { useAuth } from '@/store/auth';
 
+import { applyProfileFromUsername } from './profile';
+
 /**
  * Moodle ブラウザログインフロー (feature:auth)。
  * wstoken 自体は store/auth.ts 経由で SecureStore (kitmate.wstoken) に保存される。
@@ -64,6 +66,7 @@ export async function loginWithBrowser(): Promise<LoginResult> {
   try {
     const info = await getSiteInfo(wstoken);
     useAuth.getState().setSession(wstoken, info);
+    applyProfileFromUsername(info.username); // username から入学年度・課程・Tech を自動適用
     await markValidatedNow();
     return { status: 'success' };
   } catch (e) {
