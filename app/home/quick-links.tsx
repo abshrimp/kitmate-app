@@ -2,7 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Card, ListItem, Screen, Section } from '@/components/ui';
-import { QUICK_LINK_CATALOG, quickLinkDef } from '@/features/home/quickLinks';
+import { QUICK_LINK_CATALOG } from '@/features/home/quickLinks';
+import { linkQuickKey, useQuickLinkResolver } from '@/features/home/useQuickLinks';
+import { useLinkGroups } from '@/features/links/useLinkGroups';
 import { useI18n } from '@/i18n';
 import { useSettings } from '@/store/settings';
 import { useTheme } from '@/theme';
@@ -13,8 +15,21 @@ export default function QuickLinksEditScreen() {
   const { colors } = useTheme();
   const visible = useSettings((s) => s.homeQuickLinks);
   const set = useSettings((s) => s.set);
+  const resolve = useQuickLinkResolver();
+  const groups = useLinkGroups();
 
-  const hidden = QUICK_LINK_CATALOG.filter((d) => !visible.includes(d.key));
+  const visibleItems = visible
+    .map(resolve)
+    .filter((it): it is NonNullable<typeof it> => it !== null);
+
+  // 追加できる候補: カタログ (画面遷移) で未追加のもの
+  const availableCatalog = QUICK_LINK_CATALOG.filter((d) => !visible.includes(d.key));
+  // 追加できる候補: リンク集のリンクで未追加のもの (非表示にしたものは除く)
+  const availableLinks = groups.flatMap((g) =>
+    g.links
+      .filter((l) => !l.hidden && !visible.includes(linkQuickKey(l.id)))
+      .map((l) => ({ link: l, groupTitle: g.title })),
+  );
 
   const move = (index: number, dir: -1 | 1) => {
     const j = index + dir;
@@ -30,52 +45,71 @@ export default function QuickLinksEditScreen() {
     <Screen title={t('home.editQuickLinks')} close>
       <Section title={t('home.shown')}>
         <Card>
-          {visible.length === 0 ? (
+          {visibleItems.length === 0 ? (
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
               {t('home.quickLinksEmpty')}
             </Text>
           ) : (
-            visible.map((key, index) => {
-              const def = quickLinkDef(key);
-              if (def === undefined) return null;
-              return (
-                <ListItem
-                  key={key}
-                  icon={def.icon}
-                  iconColor={colors.primary}
-                  title={t(def.labelKey)}
-                  right={
-                    <View style={styles.controls}>
-                      <IconButton
-                        icon="chevron-up"
-                        disabled={index === 0}
-                        onPress={() => move(index, -1)}
-                      />
-                      <IconButton
-                        icon="chevron-down"
-                        disabled={index === visible.length - 1}
-                        onPress={() => move(index, 1)}
-                      />
-                      <IconButton icon="eye-off-outline" tone="danger" onPress={() => hide(key)} />
-                    </View>
-                  }
-                />
-              );
-            })
+            visibleItems.map((item, index) => (
+              <ListItem
+                key={item.key}
+                icon={item.icon}
+                iconColor={colors.primary}
+                title={item.title}
+                right={
+                  <View style={styles.controls}>
+                    <IconButton
+                      icon="chevron-up"
+                      disabled={index === 0}
+                      onPress={() => move(index, -1)}
+                    />
+                    <IconButton
+                      icon="chevron-down"
+                      disabled={index === visibleItems.length - 1}
+                      onPress={() => move(index, 1)}
+                    />
+                    <IconButton icon="eye-off-outline" tone="danger" onPress={() => hide(item.key)} />
+                  </View>
+                }
+              />
+            ))
           )}
         </Card>
       </Section>
 
-      {hidden.length > 0 && (
+      {availableCatalog.length > 0 && (
         <Section title={t('home.hidden')}>
           <Card>
-            {hidden.map((def) => (
+            {availableCatalog.map((def) => (
               <ListItem
                 key={def.key}
                 icon={def.icon}
                 iconColor={colors.textSecondary}
                 title={t(def.labelKey)}
                 right={<IconButton icon="add" tone="primary" onPress={() => add(def.key)} />}
+              />
+            ))}
+          </Card>
+        </Section>
+      )}
+
+      {availableLinks.length > 0 && (
+        <Section title={t('home.addFromLinks')}>
+          <Card>
+            {availableLinks.map(({ link, groupTitle }) => (
+              <ListItem
+                key={link.id}
+                icon={link.icon}
+                iconColor={colors.textSecondary}
+                title={link.title}
+                subtitle={groupTitle}
+                right={
+                  <IconButton
+                    icon="add"
+                    tone="primary"
+                    onPress={() => add(linkQuickKey(link.id))}
+                  />
+                }
               />
             ))}
           </Card>

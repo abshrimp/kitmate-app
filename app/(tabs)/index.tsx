@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Fragment, useMemo, type ReactNode } from 'react';
-import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Badge, Button, Card, Chip, EmptyState, ListItem, Screen, Section } from '@/components/ui';
 import { parseDateLocal, subjectMatchesAny } from '@/features/cancellations/feed';
@@ -11,7 +11,7 @@ import { formatTime } from '@/features/assignments/format';
 import { formatRemaining } from '@/features/assignments/remaining';
 import { useAssignments } from '@/features/assignments/useAssignments';
 import { eventLabel, formatEventDate, upcomingEvents } from '@/features/home/academicCalendar';
-import { quickLinkDef } from '@/features/home/quickLinks';
+import { useQuickLinkResolver } from '@/features/home/useQuickLinks';
 import { useWeather, weatherIcon } from '@/features/home/useWeather';
 import { useHasUnreadNotifications } from '@/features/notifications/useUnread';
 import { useI18n } from '@/i18n';
@@ -358,6 +358,11 @@ function QuickLinksSection() {
   const { colors } = useTheme();
   const router = useRouter();
   const quickLinks = useSettings((s) => s.homeQuickLinks);
+  const resolve = useQuickLinkResolver();
+
+  const items = quickLinks
+    .map(resolve)
+    .filter((it): it is NonNullable<typeof it> => it !== null);
 
   return (
     <Section
@@ -374,20 +379,23 @@ function QuickLinksSection() {
       }
     >
       <Card style={styles.listCard}>
-        {quickLinks
-          .map((key) => quickLinkDef(key))
-          .filter((def): def is NonNullable<typeof def> => def !== undefined)
-          .map((def, index) => (
-            <View key={def.key}>
-              {index > 0 && <View style={[styles.separator, { backgroundColor: colors.border }]} />}
-              <ListItem
-                icon={def.icon}
-                iconColor={index % 2 === 1 ? colors.accent : colors.primary}
-                title={t(def.labelKey)}
-                onPress={() => router.push(def.route)}
-              />
-            </View>
-          ))}
+        {items.map((item, index) => (
+          <View key={item.key}>
+            {index > 0 && <View style={[styles.separator, { backgroundColor: colors.border }]} />}
+            <ListItem
+              icon={item.icon}
+              iconColor={index % 2 === 1 ? colors.accent : colors.primary}
+              title={item.title}
+              onPress={() =>
+                item.kind === 'route'
+                  ? router.push(item.route)
+                  : void Linking.openURL(item.url).catch((e) =>
+                      console.error('quickLink open failed', e),
+                    )
+              }
+            />
+          </View>
+        ))}
       </Card>
     </Section>
   );
