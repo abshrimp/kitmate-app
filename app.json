@@ -47,7 +47,12 @@
     "extra": {
       "apiBaseUrl": "https://api.kitmate.jp",
       "gaMeasurementId": "",
-      "gaApiSecret": ""
-    }
+      "gaApiSecret": "",
+      "router": {},
+      "eas": {
+        "projectId": "e6eba6d1-c77c-451d-901a-b2762799d980"
+      }
+    },
+    "owner": "abshrimp"
   }
 }
