@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { Fragment, useMemo, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Badge, Button, Card, EmptyState, ListItem, Screen, Section } from '@/components/ui';
@@ -42,7 +42,7 @@ export default function HomeScreen() {
   const { t } = useI18n();
   const { colors } = useTheme();
   const router = useRouter();
-  const quickLinks = useSettings((s) => s.homeQuickLinks);
+  const sections = useSettings((s) => s.homeSections);
 
   // 画面表示時の現在時刻を一度だけ確定させる (挨拶・日付・残り時間表示用)
   const [now] = useState(() => Date.now());
@@ -54,6 +54,15 @@ export default function HomeScreen() {
     d: today.getDate(),
     w: t(`assignments.weekday${today.getDay()}`),
   });
+
+  // 設定の順序で表示するセクション (非表示は homeSections から除外されている)
+  const sectionMap: Record<string, ReactNode> = {
+    weather: <WeatherCard />,
+    assignments: <AssignmentsPreview now={now} onSeeAll={() => router.push('/assignments')} />,
+    notices: <NoticesPreview onSeeAll={() => router.push('/info')} />,
+    schedule: <UpcomingSchedule now={now} />,
+    quickLinks: <QuickLinksSection />,
+  };
 
   return (
     <Screen
@@ -86,46 +95,10 @@ export default function HomeScreen() {
         <Text style={[styles.dateLine, { color: colors.textSecondary }]}>{dateLine}</Text>
       </View>
 
-      <WeatherCard />
-
-      <AssignmentsPreview now={now} onSeeAll={() => router.push('/assignments')} />
-
-      <NoticesPreview onSeeAll={() => router.push('/info')} />
-
-      <UpcomingSchedule now={now} />
-
-      <Section
-        title={t('home.quickLinksTitle')}
-        right={
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t('home.editQuickLinks')}
-            onPress={() => router.push('/home/quick-links')}
-            hitSlop={6}
-          >
-            <Text style={[styles.seeAll, { color: colors.primary }]}>{t('home.edit')}</Text>
-          </Pressable>
-        }
-      >
-        <Card style={styles.listCard}>
-          {quickLinks
-            .map((key) => quickLinkDef(key))
-            .filter((def): def is NonNullable<typeof def> => def !== undefined)
-            .map((def, index) => (
-              <View key={def.key}>
-                {index > 0 && (
-                  <View style={[styles.separator, { backgroundColor: colors.border }]} />
-                )}
-                <ListItem
-                  icon={def.icon}
-                  iconColor={index % 2 === 1 ? colors.accent : colors.primary}
-                  title={t(def.labelKey)}
-                  onPress={() => router.push(def.route)}
-                />
-              </View>
-            ))}
-        </Card>
-      </Section>
+      {sections.map((key) => {
+        const el = sectionMap[key];
+        return el === undefined ? null : <Fragment key={key}>{el}</Fragment>;
+      })}
     </Screen>
   );
 }
@@ -346,6 +319,47 @@ function NoticeRow({ item, onPress }: { item: FeedItem; onPress: () => void }) {
       </View>
       <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
     </Pressable>
+  );
+}
+
+/** クイックリンクのセクション (設定の homeQuickLinks を表示・編集導線つき) */
+function QuickLinksSection() {
+  const { t } = useI18n();
+  const { colors } = useTheme();
+  const router = useRouter();
+  const quickLinks = useSettings((s) => s.homeQuickLinks);
+
+  return (
+    <Section
+      title={t('home.quickLinksTitle')}
+      right={
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('home.editQuickLinks')}
+          onPress={() => router.push('/home/quick-links')}
+          hitSlop={6}
+        >
+          <Text style={[styles.seeAll, { color: colors.primary }]}>{t('home.edit')}</Text>
+        </Pressable>
+      }
+    >
+      <Card style={styles.listCard}>
+        {quickLinks
+          .map((key) => quickLinkDef(key))
+          .filter((def): def is NonNullable<typeof def> => def !== undefined)
+          .map((def, index) => (
+            <View key={def.key}>
+              {index > 0 && <View style={[styles.separator, { backgroundColor: colors.border }]} />}
+              <ListItem
+                icon={def.icon}
+                iconColor={index % 2 === 1 ? colors.accent : colors.primary}
+                title={t(def.labelKey)}
+                onPress={() => router.push(def.route)}
+              />
+            </View>
+          ))}
+      </Card>
+    </Section>
   );
 }
 

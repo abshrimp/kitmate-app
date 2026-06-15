@@ -45,6 +45,7 @@ function RootNavigator() {
         <Stack.Screen name="timetable/settings" options={{ presentation: 'modal' }} />
         <Stack.Screen name="notifications" options={{ presentation: 'modal' }} />
         <Stack.Screen name="home/quick-links" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="home/edit" options={{ presentation: 'modal' }} />
       </Stack>
     </NavigationThemeProvider>
   );

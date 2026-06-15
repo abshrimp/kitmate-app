@@ -22,6 +22,7 @@ export interface SettingsState {
   startupTab: 'last' | TabKey;             // 起動時に開くタブ ('last' = 最後に開いていたタブ)
   lastTab: TabKey;                         // 最後に開いていたタブ (startupTab='last' 用に記録)
   homeQuickLinks: string[];                // ホームのクイックリンク (表示順, quickLinks カタログのキー)
+  homeSections: string[];                  // ホームのセクション (表示順, 非表示は除外)
   set: <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => void;
 }
 
@@ -42,6 +43,7 @@ export const useSettings = create<SettingsState>()(
       startupTab: 'index',
       lastTab: 'index',
       homeQuickLinks: ['timetable', 'syllabus', 'requirements', 'map'],
+      homeSections: ['weather', 'assignments', 'notices', 'schedule', 'quickLinks'],
       set: (key, value) => set({ [key]: value } as unknown as Partial<SettingsState>),
     }),
     {
