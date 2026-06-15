@@ -1,6 +1,7 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
 
+import { setGlobalFontScale } from '@/lib/fontScale';
 import { useSettings } from '@/store/settings';
 
 export interface Palette {
@@ -71,25 +72,33 @@ export interface Theme {
   colors: Palette;
   category: CategoryPalette;
   dark: boolean;
+  fontScale: number;
 }
 
 const ThemeContext = createContext<Theme>({
   colors: lightPalette,
   category: lightCategoryColors,
   dark: false,
+  fontScale: 1,
 });
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const systemScheme = useColorScheme();
   const themeMode = useSettings((s) => s.themeMode);
+  const fontScale = useSettings((s) => s.fontScale);
   const dark = themeMode === 'system' ? systemScheme === 'dark' : themeMode === 'dark';
+
+  // 文字サイズ倍率を Text パッチへ反映。fontScale を value の identity に含めることで、
+  // 変更時に useTheme 利用コンポーネントが再描画され、新しい倍率が反映される。
+  setGlobalFontScale(fontScale);
   const value = useMemo<Theme>(
     () => ({
       colors: dark ? darkPalette : lightPalette,
       category: dark ? darkCategoryColors : lightCategoryColors,
       dark,
+      fontScale,
     }),
-    [dark],
+    [dark, fontScale],
   );
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
