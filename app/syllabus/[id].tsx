@@ -49,23 +49,25 @@ export default function SyllabusDetailScreen() {
   const addEntry = useTimetable((s) => s.addEntry);
 
   useEffect(() => {
-    if (id === undefined || id === '') {
-      setStatus('notFound');
-      return;
-    }
     let alive = true;
-    setStatus('loading');
-    fetchCourse(id)
-      .then((c) => {
+    const load = async () => {
+      if (id === undefined || id === '') {
+        setStatus('notFound');
+        return;
+      }
+      setStatus('loading');
+      try {
+        const c = await fetchCourse(id);
         if (!alive) return;
         setCourse(c);
         setStatus('ready');
-      })
-      .catch((e: unknown) => {
+      } catch (e: unknown) {
         if (!alive) return;
         console.error('syllabus detail load failed', e);
         setStatus(e instanceof ApiError && e.status === 404 ? 'notFound' : 'error');
-      });
+      }
+    };
+    void load();
     return () => {
       alive = false;
     };
