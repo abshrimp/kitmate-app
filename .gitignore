@@ -43,3 +43,6 @@ example
 # generated native folders
 /ios
 /android
+
+# apple-targets で prebuild 時に生成される (コミット不要)
+targets/**/generated.entitlements
