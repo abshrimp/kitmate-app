@@ -32,7 +32,7 @@ struct WPayload: Decodable {
   let dateLabel: String
   let isWeekend: Bool
   let classes: [WClass]
-  let assignment: WAssignment?
+  let assignments: [WAssignment]
 }
 
 private func loadPayload() -> WPayload? {
@@ -97,26 +97,34 @@ private func widgetBackground<V: View>(_ content: V) -> some View {
 
 struct TimetableView: View {
   var entry: Entry
+  @Environment(\.widgetFamily) var family
+
   var body: some View {
-    VStack(alignment: .leading, spacing: 3) {
-      header("KITmate", entry.payload?.dateLabel ?? "")
+    let compact = family == .systemSmall
+    VStack(alignment: .leading, spacing: compact ? 1 : 3) {
+      header("KITmate", compact ? "" : (entry.payload?.dateLabel ?? ""))
       if let payload = entry.payload {
         if payload.isWeekend {
-          Text("今日は授業がありません").font(.footnote).foregroundColor(.secondary).padding(.top, 4)
+          Text("今日は授業なし").font(.footnote).foregroundColor(.secondary).padding(.top, 4)
         } else {
           ForEach(1...5, id: \.self) { p in
             let cls = payload.classes.first { $0.period == p }
-            HStack(spacing: 6) {
+            HStack(spacing: compact ? 4 : 6) {
               Text("\(p)")
                 .font(.caption2).bold()
                 .foregroundColor(cls != nil ? .white : .secondary)
-                .frame(width: 18, height: 18)
+                .frame(width: compact ? 15 : 18, height: compact ? 15 : 18)
                 .background(cls != nil ? colorFromHex(cls?.color) : Color.gray.opacity(0.25))
-                .cornerRadius(5)
-              Text(periodStart[p] ?? "").font(.caption2).foregroundColor(.secondary).frame(width: 38, alignment: .leading)
-              Text(cls?.name ?? "—").font(.caption).foregroundColor(cls != nil ? .primary : .secondary).lineLimit(1)
-              Spacer(minLength: 4)
-              if let room = cls?.room, !room.isEmpty {
+                .cornerRadius(4)
+              if !compact {
+                Text(periodStart[p] ?? "").font(.caption2).foregroundColor(.secondary)
+                  .frame(width: 38, alignment: .leading)
+              }
+              Text(cls?.name ?? "—")
+                .font(compact ? .caption2 : .caption)
+                .foregroundColor(cls != nil ? .primary : .secondary).lineLimit(1)
+              Spacer(minLength: 2)
+              if !compact, let room = cls?.room, !room.isEmpty {
                 Text(room).font(.caption2).foregroundColor(.secondary)
               }
             }
@@ -127,38 +135,59 @@ struct TimetableView: View {
       }
       Spacer(minLength: 0)
     }
-    .padding(12)
+    .padding(compact ? 10 : 12)
   }
 }
 
 // MARK: - 課題ウィジェット (締切 / 残り時間)
 
+struct AssignmentRow: View {
+  let a: WAssignment
+  let remaining: Bool
+  var body: some View {
+    HStack(spacing: 6) {
+      VStack(alignment: .leading, spacing: 0) {
+        Text(a.title).font(.caption).bold().lineLimit(1)
+        Text(a.course).font(.caption2).foregroundColor(.secondary).lineLimit(1)
+      }
+      Spacer(minLength: 4)
+      if remaining {
+        if a.dueAt > Date().timeIntervalSince1970 {
+          Text(Date(timeIntervalSince1970: a.dueAt), style: .relative)
+            .font(.caption).bold().foregroundColor(.orange)
+            .multilineTextAlignment(.trailing)
+        } else {
+          Text("期限切れ").font(.caption).bold().foregroundColor(.red)
+        }
+      } else {
+        Text(a.dueLabel).font(.caption).bold().foregroundColor(.orange)
+      }
+    }
+  }
+}
+
 struct AssignmentView: View {
   var entry: Entry
   /// true: 残り時間をライブ表示 / false: 締切日時を表示
   var remaining: Bool
+  @Environment(\.widgetFamily) var family
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 2) {
+    let maxCount = family == .systemSmall ? 2 : 4
+    VStack(alignment: .leading, spacing: 4) {
       header(remaining ? "課題まで" : "課題の締切", entry.payload?.dateLabel ?? "")
-      if let a = entry.payload?.assignment {
-        Text(a.course).font(.caption2).foregroundColor(.secondary).lineLimit(1)
-        Text(a.title).font(.subheadline).bold().lineLimit(2).padding(.top, 1)
-        Spacer(minLength: 2)
-        if remaining {
-          if a.dueAt > Date().timeIntervalSince1970 {
-            Text(Date(timeIntervalSince1970: a.dueAt), style: .relative)
-              .font(.title2).bold().foregroundColor(.orange)
-          } else {
-            Text("期限切れ").font(.title2).bold().foregroundColor(.red)
-          }
+      if let payload = entry.payload {
+        let items = Array(payload.assignments.prefix(maxCount))
+        if items.isEmpty {
+          Text("課題はありません").font(.footnote).foregroundColor(.secondary).padding(.top, 4)
         } else {
-          Text(a.dueLabel).font(.title2).bold().foregroundColor(.orange)
+          ForEach(Array(items.enumerated()), id: \.offset) { idx, a in
+            if idx > 0 { Divider() }
+            AssignmentRow(a: a, remaining: remaining)
+          }
         }
-      } else if entry.payload == nil {
-        Text("アプリを開いて更新").font(.footnote).foregroundColor(.secondary).padding(.top, 4)
       } else {
-        Text("課題はありません").font(.footnote).foregroundColor(.secondary).padding(.top, 4)
+        Text("アプリを開いて更新").font(.footnote).foregroundColor(.secondary).padding(.top, 4)
       }
       Spacer(minLength: 0)
     }
@@ -175,7 +204,7 @@ struct TimetableWidget: Widget {
     }
     .configurationDisplayName("KITmate 時間割")
     .description("今日の時間割 (1〜5限)")
-    .supportedFamilies([.systemMedium, .systemLarge])
+    .supportedFamilies([.systemSmall, .systemMedium])
   }
 }
 

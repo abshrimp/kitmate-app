@@ -132,41 +132,60 @@ export function TimetableWidget({
   );
 }
 
-// ===== 課題ウィジェット (共通) =====
+// ===== 課題ウィジェット (共通: 複数件をリスト表示) =====
 
-function AssignmentBody({
+const MAX_ASSIGNMENTS = 4;
+
+function AssignmentList({
   c,
   payload,
-  big,
+  mode,
 }: {
   c: Palette;
   payload: WidgetPayload | null;
-  big: string | null;
+  mode: 'due' | 'remaining';
 }) {
   if (payload === null) {
     return <TextWidget text="アプリを開いて更新" style={{ fontSize: 13, color: c.sub, marginTop: 8 }} />;
   }
-  if (payload.assignment == null) {
+  const items = payload.assignments.slice(0, MAX_ASSIGNMENTS);
+  if (items.length === 0) {
     return <TextWidget text="課題はありません" style={{ fontSize: 13, color: c.sub, marginTop: 8 }} />;
   }
   return (
-    <FlexWidget style={{ flexDirection: 'column', width: 'match_parent', marginTop: 6 }}>
-      <TextWidget
-        text={payload.assignment.course}
-        maxLines={1}
-        truncate="END"
-        style={{ fontSize: 11, color: c.sub }}
-      />
-      <TextWidget
-        text={payload.assignment.title}
-        maxLines={2}
-        truncate="END"
-        style={{ fontSize: 14, fontWeight: 'bold', color: c.text, marginTop: 2 }}
-      />
-      <TextWidget
-        text={big ?? ''}
-        style={{ fontSize: 22, fontWeight: 'bold', color: c.accent, marginTop: 6 }}
-      />
+    <FlexWidget style={{ flexDirection: 'column', width: 'match_parent', marginTop: 4 }}>
+      {items.map((a, i) => (
+        <FlexWidget
+          key={`${a.dueAt}-${i}`}
+          style={{
+            flexDirection: 'row',
+            width: 'match_parent',
+            marginTop: 4,
+            paddingBottom: 4,
+            borderBottomWidth: i === items.length - 1 ? 0 : 1,
+            borderBottomColor: c.divider,
+          }}
+        >
+          <FlexWidget style={{ flex: 1, marginRight: 6 }}>
+            <TextWidget
+              text={a.title}
+              maxLines={1}
+              truncate="END"
+              style={{ fontSize: 13, fontWeight: 'bold', color: c.text }}
+            />
+            <TextWidget
+              text={a.course}
+              maxLines={1}
+              truncate="END"
+              style={{ fontSize: 10, color: c.sub }}
+            />
+          </FlexWidget>
+          <TextWidget
+            text={mode === 'due' ? a.dueLabel : a.remainingLabel}
+            style={{ fontSize: 12, fontWeight: 'bold', color: c.accent }}
+          />
+        </FlexWidget>
+      ))}
     </FlexWidget>
   );
 }
@@ -183,7 +202,7 @@ export function AssignmentDueWidget({
   return (
     <Frame c={c}>
       <Header c={c} title="課題の締切" right={payload?.dateLabel ?? ''} />
-      <AssignmentBody c={c} payload={payload} big={payload?.assignment?.dueLabel ?? null} />
+      <AssignmentList c={c} payload={payload} mode="due" />
     </Frame>
   );
 }
@@ -200,7 +219,7 @@ export function AssignmentRemainingWidget({
   return (
     <Frame c={c}>
       <Header c={c} title="課題まで" right={payload?.dateLabel ?? ''} />
-      <AssignmentBody c={c} payload={payload} big={payload?.assignment?.remainingLabel ?? null} />
+      <AssignmentList c={c} payload={payload} mode="remaining" />
     </Frame>
   );
 }

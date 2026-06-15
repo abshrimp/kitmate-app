@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { startOfTodayUnixSec } from './format';
 import { syncAssignmentNotifications } from './notifications';
-import { buildNextAssignment } from '@/features/widgets/payload';
+import { buildAssignments } from '@/features/widgets/payload';
 import { useWidgetData } from '@/features/widgets/store';
 import { getUpcomingEvents, isInvalidToken } from '@/lib/moodle';
 import { useAuth } from '@/store/auth';
@@ -38,7 +38,7 @@ export function useAssignments(): UseAssignmentsResult {
         setEvents(sorted);
         setStatus('ready');
         // ホーム画面ウィジェット用に直近の課題を共有
-        useWidgetData.getState().setAssignment(buildNextAssignment(sorted, Date.now()));
+        useWidgetData.getState().setAssignments(buildAssignments(sorted, Date.now()));
         // 通知の再スケジュール (失敗しても UI には影響させない)
         void syncAssignmentNotifications(sorted);
       } catch (e) {

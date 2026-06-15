@@ -9,14 +9,14 @@ import type { WidgetAssignment, WidgetClass } from './payload';
  */
 interface WidgetDataState {
   classes: WidgetClass[] | null;
-  assignment: WidgetAssignment | null;
+  assignments: WidgetAssignment[] | null;
   setClasses: (classes: WidgetClass[]) => void;
-  setAssignment: (assignment: WidgetAssignment | null) => void;
+  setAssignments: (assignments: WidgetAssignment[]) => void;
 }
 
 export const useWidgetData = create<WidgetDataState>((set) => ({
   classes: null,
-  assignment: null,
+  assignments: null,
   setClasses: (classes) => set({ classes }),
-  setAssignment: (assignment) => set({ assignment }),
+  setAssignments: (assignments) => set({ assignments }),
 }));

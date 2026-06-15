@@ -32,7 +32,7 @@ export interface WidgetPayload {
   dateLabel: string; // 例 "6/15 (日)"
   isWeekend: boolean;
   classes: WidgetClass[];
-  assignment: WidgetAssignment | null;
+  assignments: WidgetAssignment[]; // 締切が近い順
 }
 
 const WEEKDAY_INDEX: Record<number, Day> = { 1: 'mon', 2: 'tue', 3: 'wed', 4: 'thu', 5: 'fri' };
@@ -88,25 +88,28 @@ export function remainingLabel(dueAtSec: number, nowMs: number): string {
   return `あと${Math.floor(hours / 24)}日`;
 }
 
-/** 締切が一番近い (未提出の) 課題を 1 件返す */
-export function buildNextAssignment(
+function toWidgetAssignment(e: AssignmentEvent, nowMs: number): WidgetAssignment {
+  const d = new Date(e.timesort * 1000);
+  const mm = d.getMinutes().toString().padStart(2, '0');
+  return {
+    title: e.activityname,
+    course: e.courseFullname,
+    dueAt: e.timesort,
+    dueLabel: `${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${mm}`,
+    remainingLabel: remainingLabel(e.timesort, nowMs),
+  };
+}
+
+/** 締切が近い順に上位 limit 件の課題を返す */
+export function buildAssignments(
   events: AssignmentEvent[],
   nowMs: number,
-): WidgetAssignment | null {
-  const sorted = [...events].sort((a, b) => a.timesort - b.timesort);
-  const first = sorted[0];
-  if (first === undefined) return null;
-  const d = new Date(first.timesort * 1000);
-  const hh = d.getHours();
-  const mm = d.getMinutes().toString().padStart(2, '0');
-  const dueLabel = `${d.getMonth() + 1}/${d.getDate()} ${hh}:${mm}`;
-  return {
-    title: first.activityname,
-    course: first.courseFullname,
-    dueAt: first.timesort,
-    dueLabel,
-    remainingLabel: remainingLabel(first.timesort, nowMs),
-  };
+  limit = 5,
+): WidgetAssignment[] {
+  return [...events]
+    .sort((a, b) => a.timesort - b.timesort)
+    .slice(0, limit)
+    .map((e) => toWidgetAssignment(e, nowMs));
 }
 
 /** 日付ラベル "6/15 (日)" を作る */

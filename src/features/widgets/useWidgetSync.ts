@@ -16,7 +16,7 @@ import { useTimetable } from '@/features/timetable/store';
 export function useWidgetSync(): void {
   const entries = useTimetable((s) => s.entries);
   const classes = useWidgetData((s) => s.classes);
-  const assignment = useWidgetData((s) => s.assignment);
+  const assignments = useWidgetData((s) => s.assignments);
   const setClasses = useWidgetData((s) => s.setClasses);
 
   // 今日のコマを算出 (公式講義は年度一覧から名前を解決)
@@ -47,8 +47,8 @@ export function useWidgetSync(): void {
       dateLabel: dateLabel(date),
       isWeekend: date.getDay() === 0 || date.getDay() === 6,
       classes,
-      assignment,
+      assignments: assignments ?? [],
     };
     void persistWidgetPayload(payload);
-  }, [classes, assignment]);
+  }, [classes, assignments]);
 }
