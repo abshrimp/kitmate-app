@@ -38,20 +38,21 @@ export async function readWidgetPayload(): Promise<WidgetPayload | null> {
  * 端末にウィジェット機能が無い場合 (Expo Go など) は静かに失敗する。
  */
 async function updateNativeWidgets(payload: WidgetPayload): Promise<void> {
-  if (Platform.OS === 'android') {
-    try {
-      const { updateAndroidWidget } = await import('./android');
+  // require は Metro が静的解決できるため動的 import の "unknown module" を避けられる。
+  // 各プラットフォームのモジュールは require された時だけ評価されるので、
+  // 反対 OS の native モジュール (react-native-android-widget / ExtensionStorage) は読み込まれない。
+  try {
+    if (Platform.OS === 'android') {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { updateAndroidWidget } = require('./android') as typeof import('./android');
       await updateAndroidWidget(payload);
-    } catch (e) {
-      // react-native-android-widget 未導入 (Expo Go) 等は想定内
-      if (__DEV__) console.warn('widget: android update skipped', e);
-    }
-  } else if (Platform.OS === 'ios') {
-    try {
-      const { updateIosWidget } = await import('./ios');
+    } else if (Platform.OS === 'ios') {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { updateIosWidget } = require('./ios') as typeof import('./ios');
       updateIosWidget(payload);
-    } catch (e) {
-      if (__DEV__) console.warn('widget: ios update skipped', e);
     }
+  } catch (e) {
+    // native ウィジェット未導入 (Expo Go) 等は想定内
+    if (__DEV__) console.warn('widget: native update skipped', e);
   }
 }
