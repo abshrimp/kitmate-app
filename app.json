@@ -9,7 +9,10 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.abshrimp.kitmate"
+      "bundleIdentifier": "com.abshrimp.kitmate",
+      "entitlements": {
+        "com.apple.security.application-groups": ["group.com.abshrimp.kitmate"]
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -56,7 +59,8 @@
             }
           ]
         }
-      ]
+      ],
+      "@bacons/apple-targets"
     ],
     "experiments": {
       "typedRoutes": true,

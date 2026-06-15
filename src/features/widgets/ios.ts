@@ -1,10 +1,16 @@
+import { ExtensionStorage } from '@bacons/apple-targets';
+
 import type { WidgetPayload } from './payload';
 
-/**
- * iOS ホーム画面ウィジェット (WidgetKit) の更新。
- * App Group へのデータ書き込み + reloadAllTimelines をネイティブブリッジ経由で行う。
- * ブリッジ未設定の間は呼び出し側 (sync.ts) で握りつぶされる。
- */
-export function updateIosWidget(_payload: WidgetPayload): void {
-  throw new Error('ios widget not configured');
+/** メインアプリと WidgetKit 拡張で共有する App Group (app.json と一致させる)。 */
+const APP_GROUP = 'group.com.abshrimp.kitmate';
+const PAYLOAD_KEY = 'payload';
+const WIDGET_KIND = 'KitmateWidget';
+
+const storage = new ExtensionStorage(APP_GROUP);
+
+/** ペイロードを App Group UserDefaults へ書き込み、ウィジェットのタイムラインを再読込する。 */
+export function updateIosWidget(payload: WidgetPayload): void {
+  storage.set(PAYLOAD_KEY, JSON.stringify(payload));
+  ExtensionStorage.reloadWidget(WIDGET_KIND);
 }
