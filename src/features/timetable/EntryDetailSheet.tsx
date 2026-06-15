@@ -7,7 +7,7 @@ import { confirmAsync } from './confirm';
 import { categoryLabel, categoryTint, dayLabel } from './labels';
 import { useTimetable } from './store';
 import { resolveBuildingFromRoom } from '@/features/map/buildings';
-import { Badge, Button } from '@/components/ui';
+import { Badge, Button, Chip } from '@/components/ui';
 import type { IoniconsName } from '@/components/ui';
 import { useI18n } from '@/i18n';
 import { PERIOD_TIMES } from '@/lib/terms';
@@ -70,11 +70,15 @@ export function EntryDetailSheet({ entry, course, onClose }: EntryDetailSheetPro
     entry.term === 'first' ? t('common.semesterFirst') : t('common.semesterSecond');
   const quartersLabel =
     entry.quarters !== undefined && entry.quarters.length > 0 ? ` ${entry.quarters.join('/')}` : '';
+  const hasSlot = entry.day !== undefined && entry.period !== undefined;
   const slotLabel =
     entry.day !== undefined && entry.period !== undefined
-      ? `${dayLabel(t, entry.day)}${entry.period} (${PERIOD_TIMES[entry.period].start}-${PERIOD_TIMES[entry.period].end})`
+      ? `${dayLabel(t, entry.day)}${entry.period}`
       : t('common.intensive');
-  const termValue = `${t('common.year', { y: entry.year })} ${semesterLabel}${quartersLabel}・${slotLabel}`;
+  const slotTime =
+    entry.period !== undefined
+      ? `${PERIOD_TIMES[entry.period].start}-${PERIOD_TIMES[entry.period].end}`
+      : '';
 
   const onDelete = async () => {
     const ok = await confirmAsync({
@@ -130,7 +134,12 @@ export function EntryDetailSheet({ entry, course, onClose }: EntryDetailSheetPro
               )}
             </View>
 
-            <InfoRow icon="time-outline" label={t('timetable.detailTerm')} value={termValue} />
+            <View style={styles.infoChips}>
+              <Chip icon="calendar-outline" label={t('common.year', { y: entry.year })} />
+              <Chip icon="bookmark-outline" label={`${semesterLabel}${quartersLabel}`} />
+              <Chip icon="grid-outline" tone="primary" label={slotLabel} />
+              {hasSlot && slotTime !== '' && <Chip icon="time-outline" label={slotTime} />}
+            </View>
             {instructors !== undefined && instructors.length > 0 && (
               <InfoRow
                 icon="person-outline"
@@ -288,6 +297,13 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 6,
     marginBottom: 12,
+  },
+  infoChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    paddingVertical: 4,
+    marginBottom: 4,
   },
   infoRow: {
     flexDirection: 'row',
