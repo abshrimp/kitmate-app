@@ -13,12 +13,25 @@ export function setGlobalFontScale(scale: number): void {
 
 interface PatchableText {
   render?: (...args: unknown[]) => unknown;
+  type?: PatchableText;
   __kitmateFontPatched?: boolean;
+}
+
+/** Text の render を持つオブジェクトを探す (forwardRef は Text 自身、memo(forwardRef) は Text.type)。 */
+function findRenderTarget(): PatchableText | null {
+  const t = Text as unknown as PatchableText;
+  if (typeof t.render === 'function') return t;
+  if (t.type !== undefined && typeof t.type.render === 'function') return t.type;
+  return null;
 }
 
 /** RN の Text をパッチして文字サイズ倍率を適用する (アプリ起動時に一度だけ呼ぶ)。 */
 export function installFontScalePatch(): void {
-  const TextRef = Text as unknown as PatchableText;
+  const TextRef = findRenderTarget();
+  if (TextRef === null) {
+    console.warn('[fontScale] Text.render not found; font scaling disabled');
+    return;
+  }
   const original = TextRef.render;
   if (original === undefined || TextRef.__kitmateFontPatched === true) return;
   TextRef.__kitmateFontPatched = true;
