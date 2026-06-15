@@ -1,6 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  type LayoutChangeEvent,
+} from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   runOnJS,
@@ -8,6 +15,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { G, Line, Rect, Text as SvgText } from 'react-native-svg';
 
 import {
@@ -21,7 +29,7 @@ import {
   type Building,
   type BuildingKind,
 } from './buildings';
-import { Badge, SelectModal, type IoniconsName } from '@/components/ui';
+import { Badge, type IoniconsName } from '@/components/ui';
 import { useI18n } from '@/i18n';
 import { useTheme } from '@/theme';
 
@@ -77,14 +85,15 @@ function RoundButton({
   );
 }
 
-export function CampusMap({ focusId }: { focusId?: string }) {
+export function CampusMap({ focusId, onBack }: { focusId?: string; onBack?: () => void }) {
   const { colors, dark } = useTheme();
   const { t, locale } = useI18n();
+  const insets = useSafeAreaInsets();
 
   const [container, setContainer] = useState({ w: 0, h: 0 });
   // focusId 指定時は最初からその建物を選択状態にする (詳細カードを出す)
   const [selectedId, setSelectedId] = useState<string | null>(focusId ?? null);
-  const [listVisible, setListVisible] = useState(false);
+  const [query, setQuery] = useState('');
 
   const scale = useSharedValue(1);
   const tx = useSharedValue(0);
@@ -215,49 +224,27 @@ export function CampusMap({ focusId }: { focusId?: string }) {
 
   const otherLocale = locale === 'ja' ? 'en' : 'ja';
 
-  const listOptions = useMemo(
-    () =>
-      BUILDINGS.map((b) => ({
-        value: b.id,
-        label: b.name[locale],
-        subtitle: `${b.name[otherLocale]} — ${t(KIND_LABEL_KEY[b.kind])}`,
-      })),
-    [locale, otherLocale, t],
-  );
+  // 検索: 建物名 (日英 / 短縮名) の部分一致 (最大 8 件)
+  const results = useMemo<Building[]>(() => {
+    const q = query.trim().toLowerCase();
+    if (q === '') return [];
+    return BUILDINGS.filter((b) => {
+      const hay = [b.name.ja, b.name.en, b.short?.ja ?? '', b.short?.en ?? ''].join(' ').toLowerCase();
+      return hay.includes(q);
+    }).slice(0, 8);
+  }, [query]);
 
-  const onSelectFromList = (id: string) => {
-    setListVisible(false);
-    const b = BUILDINGS.find((x) => x.id === id);
-    if (!b) return;
-    setSelectedId(id);
+  const pickBuilding = (b: Building) => {
+    setQuery('');
+    setSelectedId(b.id);
     centerOn(b);
   };
 
   const buildingFillOpacity = dark ? 0.32 : 0.2;
 
   return (
-    <View style={styles.root}>
-      <View style={styles.topArea}>
-        <Text style={[styles.campus, { color: colors.text }]}>{t('map.campus')}</Text>
-        <Text style={[styles.note, { color: colors.textSecondary }]}>{t('map.note')}</Text>
-        <View style={styles.legendRow}>
-          {KIND_ORDER.map((kind) => (
-            <View key={kind} style={styles.legendItem}>
-              <View
-                style={[styles.legendDot, { backgroundColor: colors[KIND_COLOR_KEY[kind]] }]}
-              />
-              <Text style={[styles.legendLabel, { color: colors.textSecondary }]}>
-                {t(KIND_LABEL_KEY[kind])}
-              </Text>
-            </View>
-          ))}
-        </View>
-      </View>
-
-      <View
-        style={[styles.mapArea, { backgroundColor: colors.cardAlt, borderColor: colors.border }]}
-        onLayout={onLayout}
-      >
+    <View style={[styles.root, { backgroundColor: colors.cardAlt }]}>
+      <View style={styles.mapArea} onLayout={onLayout}>
         <GestureDetector gesture={composedGesture}>
           <View style={styles.gestureSurface} collapsable={false}>
             <Animated.View style={[styles.canvas, animatedStyle]}>
@@ -377,10 +364,24 @@ export function CampusMap({ focusId }: { focusId?: string }) {
           </View>
         </GestureDetector>
 
-        {/* 検索/一覧ボタン (右上) */}
-        <View style={styles.listButtonWrap} pointerEvents="box-none">
-          <RoundButton icon="search" label={t('map.openList')} onPress={() => setListVisible(true)} />
-        </View>
+        {/* 凡例 (左下フロート) */}
+        {selected === null && (
+          <View
+            style={[styles.legend, { backgroundColor: colors.card, borderColor: colors.border }]}
+            pointerEvents="none"
+          >
+            {KIND_ORDER.map((kind) => (
+              <View key={kind} style={styles.legendItem}>
+                <View
+                  style={[styles.legendDot, { backgroundColor: colors[KIND_COLOR_KEY[kind]] }]}
+                />
+                <Text style={[styles.legendLabel, { color: colors.textSecondary }]}>
+                  {t(KIND_LABEL_KEY[kind])}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* ズームコントロール (右下フロート) */}
         <View style={styles.controls} pointerEvents="box-none">
@@ -419,15 +420,60 @@ export function CampusMap({ focusId }: { focusId?: string }) {
             </Pressable>
           </View>
         )}
-      </View>
 
-      <SelectModal
-        visible={listVisible}
-        title={t('map.buildingList')}
-        options={listOptions}
-        onSelect={onSelectFromList}
-        onClose={() => setListVisible(false)}
-      />
+        {/* フローティング検索バー (上部, セーフエリア) */}
+        <View style={[styles.topBar, { top: insets.top + 8 }]} pointerEvents="box-none">
+          <View style={styles.searchRow}>
+            {onBack !== undefined && (
+              <RoundButton icon="chevron-back" label={t('common.back')} onPress={onBack} />
+            )}
+            <View
+              style={[styles.searchBox, { backgroundColor: colors.card, borderColor: colors.border }]}
+            >
+              <Ionicons name="search" size={18} color={colors.textSecondary} />
+              <TextInput
+                style={[styles.searchInput, { color: colors.text }]}
+                value={query}
+                onChangeText={setQuery}
+                placeholder={t('map.searchPlaceholder')}
+                placeholderTextColor={colors.textSecondary}
+                returnKeyType="search"
+              />
+              {query !== '' && (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={t('common.close')}
+                  hitSlop={8}
+                  onPress={() => setQuery('')}
+                >
+                  <Ionicons name="close-circle" size={18} color={colors.textSecondary} />
+                </Pressable>
+              )}
+            </View>
+          </View>
+          {results.length > 0 && (
+            <View
+              style={[styles.results, { backgroundColor: colors.card, borderColor: colors.border }]}
+            >
+              {results.map((b) => (
+                <Pressable
+                  key={b.id}
+                  accessibilityRole="button"
+                  onPress={() => pickBuilding(b)}
+                  style={({ pressed }) => [styles.resultRow, pressed && styles.pressed]}
+                >
+                  <View
+                    style={[styles.legendDot, { backgroundColor: colors[KIND_COLOR_KEY[b.kind]] }]}
+                  />
+                  <Text style={[styles.resultText, { color: colors.text }]} numberOfLines={1}>
+                    {b.name[locale]}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
+        </View>
+      </View>
     </View>
   );
 }
@@ -435,25 +481,6 @@ export function CampusMap({ focusId }: { focusId?: string }) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-  },
-  topArea: {
-    paddingHorizontal: 16,
-    paddingBottom: 10,
-    gap: 3,
-  },
-  campus: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  note: {
-    fontSize: 12,
-  },
-  legendRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    columnGap: 12,
-    rowGap: 4,
-    marginTop: 2,
   },
   legendItem: {
     flexDirection: 'row',
@@ -470,10 +497,6 @@ const styles = StyleSheet.create({
   },
   mapArea: {
     flex: 1,
-    marginHorizontal: 12,
-    marginBottom: 12,
-    borderRadius: 16,
-    borderWidth: 1,
     overflow: 'hidden',
   },
   gestureSurface: {
@@ -482,10 +505,57 @@ const styles = StyleSheet.create({
   canvas: {
     flex: 1,
   },
-  listButtonWrap: {
+  legend: {
     position: 'absolute',
-    top: 12,
+    left: 12,
+    bottom: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 4,
+  },
+  topBar: {
+    position: 'absolute',
+    left: 12,
     right: 12,
+  },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  searchBox: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderRadius: 22,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    height: 44,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    paddingVertical: 0,
+  },
+  results: {
+    marginTop: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  resultRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  resultText: {
+    flex: 1,
+    fontSize: 15,
   },
   controls: {
     position: 'absolute',

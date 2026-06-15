@@ -1,16 +1,19 @@
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { StyleSheet, View } from 'react-native';
 
-import { Screen } from '@/components/ui';
 import { CampusMap } from '@/features/map/CampusMap';
-import { useI18n } from '@/i18n';
 
-/** キャンパスマップ (松ヶ崎キャンパス)。?building=<id> で特定の建物にフォーカスする */
+/** キャンパスマップ (松ヶ崎キャンパス)。全画面表示。?building=<id> で特定の建物にフォーカス */
 export default function MapScreen() {
-  const { t } = useI18n();
   const { building } = useLocalSearchParams<{ building?: string }>();
+  const router = useRouter();
   return (
-    <Screen title={t('map.title')} scroll={false} padded={false}>
-      <CampusMap focusId={building} />
-    </Screen>
+    <View style={styles.root}>
+      <CampusMap focusId={building} onBack={() => router.back()} />
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+});
