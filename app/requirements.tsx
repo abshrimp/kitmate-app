@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { Badge, Button, Card, EmptyState, Screen, Section, SegmentedControl } from '@/components/ui';
+import { Badge, Button, Card, Chip, EmptyState, Screen, Section, SegmentedControl } from '@/components/ui';
 import {
   aggregateCredits,
   CATEGORY_GROUPS,
@@ -262,9 +262,9 @@ function ExcludedRow({ item, first }: { item: ExcludedItem; first: boolean }) {
           {name}
         </Text>
         {item.credits !== null && (
-          <Text style={[styles.excludedCredits, { color: colors.textSecondary }]}>
-            {t('common.credits', { n: item.credits })}
-          </Text>
+          <View style={styles.excludedMeta}>
+            <Chip icon="ribbon-outline" label={t('common.credits', { n: item.credits })} />
+          </View>
         )}
       </View>
       <Badge label={reasonLabel} color={reasonColor} />
@@ -318,8 +318,8 @@ const styles = StyleSheet.create({
   excludedName: {
     fontSize: 14,
   },
-  excludedCredits: {
-    fontSize: 12,
+  excludedMeta: {
+    flexDirection: 'row',
   },
   disclaimer: {
     marginTop: 24,

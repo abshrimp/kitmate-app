@@ -105,11 +105,9 @@ export function EntryDetailSheet({ entry, course, onClose }: EntryDetailSheetPro
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={[styles.overlay, { backgroundColor: colors.overlay }]} onPress={onClose}>
-        <Pressable
-          style={[styles.sheet, { backgroundColor: colors.card }]}
-          onPress={() => undefined}
-        >
+      <View style={[styles.overlay, { backgroundColor: colors.overlay }]}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        <View style={[styles.sheet, { backgroundColor: colors.card }]}>
           <View style={[styles.header, { borderBottomColor: colors.border }]}>
             <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>
               {name}
@@ -249,8 +247,8 @@ export function EntryDetailSheet({ entry, course, onClose }: EntryDetailSheetPro
               />
             </View>
           </ScrollView>
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   );
 }

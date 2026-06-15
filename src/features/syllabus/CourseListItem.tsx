@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { categoryColor, categoryLabel, slotsLabel, termLabel } from './lib';
-import { Badge, Card } from '@/components/ui';
+import { Badge, Card, Chip } from '@/components/ui';
 import { useI18n } from '@/i18n';
 import { useSettings } from '@/store/settings';
 import { useTheme } from '@/theme';
@@ -25,12 +25,6 @@ export function CourseListItem({ course, onPress }: CourseListItemProps) {
       : null;
 
   const title = course.classLabel !== undefined ? `${course.name} ${course.classLabel}` : course.name;
-  const meta = [
-    termLabel(t, course.term),
-    slotsLabel(t, course),
-    t('common.credits', { n: course.credits }),
-    t('common.grade', { n: course.targetGrade }),
-  ].join('  ');
 
   return (
     <Card onPress={onPress} style={styles.card}>
@@ -46,9 +40,10 @@ export function CourseListItem({ course, onPress }: CourseListItemProps) {
         {course.instructors.join(t('syllabus.instructorSeparator'))}
       </Text>
       <View style={styles.metaRow}>
-        <Text style={[styles.meta, { color: colors.textSecondary }]} numberOfLines={1}>
-          {meta}
-        </Text>
+        <Chip icon="calendar-outline" label={termLabel(t, course.term)} />
+        <Chip icon="time-outline" label={slotsLabel(t, course)} />
+        <Chip icon="ribbon-outline" label={t('common.credits', { n: course.credits })} />
+        <Chip icon="school-outline" label={t('common.grade', { n: course.targetGrade })} />
         {!course.offeredThisYear && (
           <Badge label={t('syllabus.notOffered')} color={colors.warning} />
         )}
@@ -79,12 +74,8 @@ const styles = StyleSheet.create({
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-    marginTop: 2,
-  },
-  meta: {
-    flex: 1,
-    fontSize: 13,
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 4,
   },
 });

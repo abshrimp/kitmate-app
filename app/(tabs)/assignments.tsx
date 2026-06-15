@@ -238,14 +238,9 @@ export default function AssignmentsScreen() {
         animationType="fade"
         onRequestClose={() => setSelected(null)}
       >
-        <Pressable
-          style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}
-          onPress={() => setSelected(null)}
-        >
-          <Pressable
-            style={[styles.modalSheet, { backgroundColor: colors.card }]}
-            onPress={() => undefined}
-          >
+        <View style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setSelected(null)} />
+          <View style={[styles.modalSheet, { backgroundColor: colors.card }]}>
             {selected !== null && (
               <>
                 <Text style={[styles.modalTitle, { color: colors.text }]}>
@@ -290,8 +285,8 @@ export default function AssignmentsScreen() {
                 </View>
               </>
             )}
-          </Pressable>
-        </Pressable>
+          </View>
+        </View>
       </Modal>
     </Screen>
   );
