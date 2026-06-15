@@ -81,6 +81,12 @@ export async function fetchCourse(id: string): Promise<Course> {
   return apiFetch<Course>(`/api/courses/${encodeURIComponent(id)}`);
 }
 
+/** 講義データが存在する年度一覧。 */
+export async function fetchCourseYears(): Promise<number[]> {
+  const res = await apiFetch<{ years: number[] }>('/api/courses/years');
+  return res.years;
+}
+
 // ===== requirements =====
 
 export interface RequirementsResponse {

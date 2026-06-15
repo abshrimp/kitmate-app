@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Modal,
@@ -14,16 +14,18 @@ import {
 } from 'react-native';
 
 import { Button, ListItem, Screen, SegmentedControl } from '@/components/ui';
-import { notify } from '@/features/timetable/confirm';
+import { confirmAsync, notify } from '@/features/timetable/confirm';
 import { EntryDetailSheet } from '@/features/timetable/EntryDetailSheet';
 import { quarterLabel } from '@/features/timetable/labels';
 import { entriesFor, useTimetable } from '@/features/timetable/store';
 import { useTimetableSync } from '@/features/timetable/sync';
 import { TimetableGrid } from '@/features/timetable/TimetableGrid';
 import { useCourseMap } from '@/features/timetable/useCourseMap';
+import { useCourseYears } from '@/features/timetable/useCourseYears';
 import { useI18n } from '@/i18n';
 import { API_BASE_URL, createShare } from '@/lib/api';
 import { quarterBelongsTo } from '@/lib/terms';
+import { useSettings } from '@/store/settings';
 import { useTheme } from '@/theme';
 import type { Day, Period, Quarter, Semester } from '@/types';
 
@@ -73,6 +75,67 @@ export default function TimetableScreen() {
   const quarterFilter = useTimetable((s) => s.quarterFilter);
   const setView = useTimetable((s) => s.setView);
   const setQuarterFilter = useTimetable((s) => s.setQuarterFilter);
+  const replaceAll = useTimetable((s) => s.replaceAll);
+
+  // データ無し年度の代用: データのある年度一覧 + 代用警告/作り直し
+  const availableYears = useCourseYears();
+  const hideMissingYearWarning = useSettings((s) => s.hideMissingYearWarning);
+  const substitutedYears = useSettings((s) => s.substitutedYears);
+  const setSetting = useSettings((s) => s.set);
+  const warnedYearRef = useRef<number | null>(null);
+  const rebuildCheckedRef = useRef(false);
+
+  // 代用データで作成した年度を記録 (データ追加後の作り直し検出用)
+  useEffect(() => {
+    if (availableYears === null) return;
+    const yearsWithEntries = [...new Set(entries.map((e) => e.year))];
+    const newly = yearsWithEntries.filter(
+      (y) => !availableYears.includes(y) && !substitutedYears.includes(y),
+    );
+    if (newly.length > 0) setSetting('substitutedYears', [...substitutedYears, ...newly]);
+  }, [entries, availableYears, substitutedYears, setSetting]);
+
+  // 表示中の年度にデータが無ければ警告 (今後表示しない可)
+  useEffect(() => {
+    if (availableYears === null || hideMissingYearWarning) return;
+    if (availableYears.includes(viewYear) || warnedYearRef.current === viewYear) return;
+    warnedYearRef.current = viewYear;
+    void (async () => {
+      const ok = await confirmAsync({
+        title: t('timetable.missingYearTitle', { y: viewYear }),
+        message: t('timetable.missingYearMessage'),
+        confirmLabel: t('timetable.missingYearOk'),
+        cancelLabel: t('timetable.missingYearDontShow'),
+      });
+      if (!ok) setSetting('hideMissingYearWarning', true);
+    })();
+  }, [viewYear, availableYears, hideMissingYearWarning, t, setSetting]);
+
+  // 代用した年度のデータが後から追加されたら、その年度の時間割を作り直すか確認
+  useEffect(() => {
+    if (availableYears === null || rebuildCheckedRef.current) return;
+    const ready = substitutedYears.filter((y) => availableYears.includes(y));
+    if (ready.length === 0) return;
+    rebuildCheckedRef.current = true;
+    void (async () => {
+      for (const y of ready) {
+        if (useTimetable.getState().entries.some((e) => e.year === y)) {
+          const ok = await confirmAsync({
+            title: t('timetable.yearDataAddedTitle', { y }),
+            message: t('timetable.yearDataAddedMessage', { y }),
+            confirmLabel: t('timetable.yearDataRebuild'),
+            cancelLabel: t('common.cancel'),
+            destructive: true,
+          });
+          if (ok) replaceAll(useTimetable.getState().entries.filter((e) => e.year !== y));
+        }
+        setSetting(
+          'substitutedYears',
+          useSettings.getState().substitutedYears.filter((x) => x !== y),
+        );
+      }
+    })();
+  }, [availableYears, substitutedYears, t, replaceAll, setSetting]);
 
   const [menuVisible, setMenuVisible] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);

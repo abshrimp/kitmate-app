@@ -39,6 +39,15 @@ export const timetableI18n = {
     deleteConfirmTitle: '削除しますか?',
     deleteConfirmMessage: '「{name}」を時間割から削除します。',
 
+    missingYearTitle: '{y}年度の講義データはまだありません',
+    missingYearMessage:
+      '情報がある最新年度のデータを使って表示します。開講されない講義や、曜日・時限が変わる場合があります。',
+    missingYearOk: 'OK',
+    missingYearDontShow: '今後表示しない',
+    yearDataAddedTitle: '{y}年度の講義データが追加されました',
+    yearDataAddedMessage: '代用データで作成した{y}年度の時間割を一旦削除して作り直しますか?',
+    yearDataRebuild: '削除して作り直す',
+
     pickerTitle: '講義を選択',
     pickerIntensiveTitle: '集中講義を追加',
     searchPlaceholder: '講義名・教員名・科目番号で検索',
@@ -164,6 +173,15 @@ export const timetableI18n = {
     deleteEntry: 'Remove from timetable',
     deleteConfirmTitle: 'Remove?',
     deleteConfirmMessage: 'Remove "{name}" from your timetable.',
+
+    missingYearTitle: 'No course data for {y} yet',
+    missingYearMessage:
+      'The latest available year’s data is used instead. Some courses may not be offered, or their day/period may differ.',
+    missingYearOk: 'OK',
+    missingYearDontShow: 'Don’t show again',
+    yearDataAddedTitle: 'Course data for {y} is now available',
+    yearDataAddedMessage: 'Rebuild your {y} timetable (built with substitute data) from scratch?',
+    yearDataRebuild: 'Clear & rebuild',
 
     pickerTitle: 'Choose a course',
     pickerIntensiveTitle: 'Add intensive course',

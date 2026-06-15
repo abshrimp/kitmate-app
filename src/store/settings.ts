@@ -24,6 +24,8 @@ export interface SettingsState {
   homeQuickLinks: string[];                // ホームのクイックリンク (表示順, quickLinks カタログのキー)
   homeSections: string[];                  // ホームのセクション (表示順, 非表示は除外)
   fontScale: number;                       // 文字サイズ倍率 (0.85 小 / 1 標準 / 1.15 大 / 1.3 特大)
+  hideMissingYearWarning: boolean;         // データ無し年度の警告を今後表示しない
+  substitutedYears: number[];              // 代用データで時間割を作成した年度 (データ追加時に作り直し促す)
   set: <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => void;
 }
 
@@ -46,6 +48,8 @@ export const useSettings = create<SettingsState>()(
       homeQuickLinks: ['timetable', 'syllabus', 'requirements', 'map'],
       homeSections: ['weather', 'assignments', 'notices', 'schedule', 'quickLinks'],
       fontScale: 1,
+      hideMissingYearWarning: false,
+      substitutedYears: [],
       set: (key, value) => set({ [key]: value } as unknown as Partial<SettingsState>),
     }),
     {
