@@ -14,7 +14,7 @@ import {
   View,
 } from 'react-native';
 
-import { Button, EmptyState, Screen } from '@/components/ui';
+import { Button, Chip, EmptyState, Screen } from '@/components/ui';
 import { calendarDaysFrom, formatTime, startOfDay, stripHtml } from '@/features/assignments/format';
 import { formatRemaining } from '@/features/assignments/remaining';
 import { useAssignments } from '@/features/assignments/useAssignments';
@@ -190,8 +190,6 @@ export default function AssignmentsScreen() {
           </View>
         )}
         renderItem={({ item }) => {
-          const dueColor = item.overdue ? colors.danger : colors.textSecondary;
-          const remainColor = item.overdue ? colors.danger : colors.primary;
           return (
             <Pressable
               onPress={() => setSelected(item)}
@@ -208,12 +206,18 @@ export default function AssignmentsScreen() {
                 {item.courseFullname}
               </Text>
               <View style={styles.itemMeta}>
-                <Text style={[styles.itemDue, { color: dueColor }]}>
-                  {t('assignments.dueAt', { time: formatTime(item.timesort) })}
-                </Text>
-                <Text style={[styles.itemRemaining, { color: remainColor }]}>
-                  {formatRemaining(item.timesort, now, t, 'assignments.overdue')}
-                </Text>
+                <Chip
+                  icon="time-outline"
+                  tone={item.overdue ? 'danger' : 'neutral'}
+                  label={t('assignments.dueAt', { time: formatTime(item.timesort) })}
+                />
+                <View style={styles.metaEnd}>
+                  <Chip
+                    icon="hourglass-outline"
+                    tone={item.overdue ? 'danger' : 'primary'}
+                    label={formatRemaining(item.timesort, now, t, 'assignments.overdue')}
+                  />
+                </View>
               </View>
             </Pressable>
           );
@@ -251,25 +255,19 @@ export default function AssignmentsScreen() {
                   {selected.courseFullname}
                 </Text>
                 <View style={styles.modalMeta}>
-                  <Text
-                    style={[
-                      styles.modalDue,
-                      { color: selected.overdue ? colors.danger : colors.text },
-                    ]}
-                  >
-                    {t('assignments.dueOn', {
+                  <Chip
+                    icon="calendar-outline"
+                    tone={selected.overdue ? 'danger' : 'neutral'}
+                    label={t('assignments.dueOn', {
                       date: dateLabel(new Date(selected.timesort * 1000), t),
                       time: formatTime(selected.timesort),
                     })}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.modalRemaining,
-                      { color: selected.overdue ? colors.danger : colors.primary },
-                    ]}
-                  >
-                    {formatRemaining(selected.timesort, now, t, 'assignments.overdue')}
-                  </Text>
+                  />
+                  <Chip
+                    icon="hourglass-outline"
+                    tone={selected.overdue ? 'danger' : 'primary'}
+                    label={formatRemaining(selected.timesort, now, t, 'assignments.overdue')}
+                  />
                 </View>
                 <ScrollView style={styles.modalBody}>
                   <Text style={[styles.modalDescription, { color: colors.text }]}>
@@ -340,16 +338,10 @@ const styles = StyleSheet.create({
   itemMeta: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginTop: 4,
+    gap: 8,
+    marginTop: 6,
   },
-  itemDue: {
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  itemRemaining: {
-    fontSize: 13,
-    fontWeight: '700',
+  metaEnd: {
     marginLeft: 'auto',
   },
   modalOverlay: {
@@ -377,16 +369,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
-    gap: 10,
-    marginTop: 4,
-  },
-  modalDue: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  modalRemaining: {
-    fontSize: 14,
-    fontWeight: '700',
+    gap: 8,
+    marginTop: 6,
   },
   modalBody: {
     marginTop: 8,

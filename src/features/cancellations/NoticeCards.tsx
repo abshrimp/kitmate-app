@@ -9,7 +9,7 @@ import {
   noticeCategoryKind,
   shortDayLabel,
 } from './feed';
-import { Badge, Card, type IoniconsName } from '@/components/ui';
+import { Badge, Card, Chip, type IoniconsName } from '@/components/ui';
 import { useI18n, type I18n } from '@/i18n';
 import { useTheme } from '@/theme';
 import type { CancellationNotice, LectureNotice } from '@/types';
@@ -146,13 +146,12 @@ export function LectureNoticeCard({ item }: { item: LectureNotice }) {
         />
         {isNew && <Badge label={t('cancellations.newBadge')} color={colors.danger} icon="ellipse" />}
       </View>
-      <Text style={[styles.courseName, { color: colors.text }]}>
-        {item.courseName}
-        {slot === '' ? '' : ' '}
-        {slot !== '' && (
-          <Text style={[styles.slotInline, { color: colors.textSecondary }]}>{slot}</Text>
-        )}
-      </Text>
+      <Text style={[styles.courseName, { color: colors.text }]}>{item.courseName}</Text>
+      {slot !== '' && (
+        <View style={styles.slotRow}>
+          <Chip icon="time-outline" label={slot} />
+        </View>
+      )}
       {instructors !== '' && (
         <Text style={[styles.instructors, { color: colors.textSecondary }]} numberOfLines={2}>
           {instructors}
@@ -192,9 +191,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     lineHeight: 22,
   },
-  slotInline: {
-    fontSize: 13,
-    fontWeight: '600',
+  slotRow: {
+    flexDirection: 'row',
   },
   instructors: {
     fontSize: 13,

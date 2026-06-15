@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { Fragment, useMemo, type ReactNode } from 'react';
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Badge, Button, Card, EmptyState, ListItem, Screen, Section } from '@/components/ui';
+import { Badge, Button, Card, Chip, EmptyState, ListItem, Screen, Section } from '@/components/ui';
 import { parseDateLocal, subjectMatchesAny } from '@/features/cancellations/feed';
 import { useCancellationFeed } from '@/features/cancellations/useCancellationFeed';
 import { useMyCourseNames } from '@/features/cancellations/useMyCourseNames';
@@ -207,8 +207,7 @@ function AssignmentRow({
 }) {
   const { t } = useI18n();
   const { colors } = useTheme();
-  const dueColor = event.overdue ? colors.danger : colors.textSecondary;
-  const remainColor = event.overdue ? colors.danger : colors.primary;
+  const due = new Date(event.timesort * 1000);
   return (
     <Pressable
       accessibilityRole="button"
@@ -223,17 +222,21 @@ function AssignmentRow({
           {event.courseFullname}
         </Text>
         <View style={styles.rowMeta}>
-          <Text style={[styles.rowDue, { color: dueColor }]}>
-            {t('home.dueOn', {
-              m: new Date(event.timesort * 1000).getMonth() + 1,
-              d: new Date(event.timesort * 1000).getDate(),
-              w: t(`assignments.weekday${new Date(event.timesort * 1000).getDay()}`),
+          <Chip
+            icon="calendar-outline"
+            tone={event.overdue ? 'danger' : 'neutral'}
+            label={t('home.dueOn', {
+              m: due.getMonth() + 1,
+              d: due.getDate(),
+              w: t(`assignments.weekday${due.getDay()}`),
               time: formatTime(event.timesort),
             })}
-          </Text>
-          <Text style={[styles.rowRemaining, { color: remainColor }]}>
-            {formatRemaining(event.timesort, now, t, 'home.overdue')}
-          </Text>
+          />
+          <Chip
+            icon="hourglass-outline"
+            tone={event.overdue ? 'danger' : 'primary'}
+            label={formatRemaining(event.timesort, now, t, 'home.overdue')}
+          />
         </View>
       </View>
       <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
@@ -338,11 +341,8 @@ function NoticeRow({ item, onPress }: { item: FeedItem; onPress: () => void }) {
           </Text>
         </View>
         {slot !== '' && (
-          <View style={styles.slotRow}>
-            <Ionicons name="time-outline" size={13} color={colors.textSecondary} />
-            <Text style={[styles.rowSubtitle, { color: colors.textSecondary }]} numberOfLines={1}>
-              {slot}
-            </Text>
+          <View style={styles.noticeMeta}>
+            <Chip icon="time-outline" label={slot} />
           </View>
         )}
       </View>
@@ -451,9 +451,7 @@ function UpcomingSchedule({ now }: { now: number }) {
           <View key={`${e.start}-${index}`}>
             {index > 0 && <View style={[styles.separator, { backgroundColor: colors.border }]} />}
             <View style={styles.scheduleRow}>
-              <Text style={[styles.scheduleDate, { color: colors.primary }]}>
-                {formatEventDate(e)}
-              </Text>
+              <Chip icon="calendar-outline" tone="primary" label={formatEventDate(e)} />
               <Text style={[styles.scheduleLabel, { color: colors.text }]} numberOfLines={2}>
                 {eventLabel(e, locale)}
               </Text>
@@ -544,11 +542,6 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
     paddingHorizontal: 4,
   },
-  scheduleDate: {
-    fontSize: 14,
-    fontWeight: '700',
-    minWidth: 64,
-  },
   scheduleLabel: {
     flex: 1,
     fontSize: 14,
@@ -612,17 +605,9 @@ const styles = StyleSheet.create({
   rowMeta: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginTop: 2,
-  },
-  rowDue: {
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  rowRemaining: {
-    fontSize: 13,
-    fontWeight: '700',
-    marginLeft: 'auto',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 4,
   },
   noticeHeader: {
     flexDirection: 'row',
@@ -634,9 +619,8 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
   },
-  slotRow: {
+  noticeMeta: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
+    marginTop: 4,
   },
 });
