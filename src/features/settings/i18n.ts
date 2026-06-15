@@ -78,6 +78,8 @@ export const settingsI18n = {
     pushErrorTitle: '通知の設定に失敗しました',
     pushPermissionDenied: '通知の権限が許可されていません。端末の設定から許可してください。',
     expoTokenError: 'Expo push トークンを取得できません(開発ビルドが必要な場合があります)',
+    pushNoProjectId: 'プッシュ通知の設定が未完了です(EAS プロジェクト ID 未設定)。開発者にお問い合わせください。',
+    pushExpoGo: 'Expo Go ではプッシュ通知を取得できません。開発ビルド版アプリが必要です。',
     pushUnsupported: 'このブラウザはプッシュ通知に対応していません',
     pushRegisterFailed: 'サーバーへの登録に失敗しました',
 
@@ -184,6 +186,8 @@ export const settingsI18n = {
     pushErrorTitle: 'Failed to set up notifications',
     pushPermissionDenied: 'Notification permission was not granted. Please allow it in your device settings.',
     expoTokenError: 'Could not obtain an Expo push token (a development build may be required).',
+    pushNoProjectId: 'Push notifications are not fully configured (EAS project ID missing). Please contact the developer.',
+    pushExpoGo: 'Push tokens are unavailable in Expo Go. A development build is required.',
     pushUnsupported: 'This browser does not support push notifications.',
     pushRegisterFailed: 'Failed to register with the server.',
 

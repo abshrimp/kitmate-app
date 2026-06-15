@@ -87,13 +87,19 @@ async function subscribeNative(prefs: PushPreferences): Promise<void> {
     }
   }
 
-  // Expo push トークン取得 (Expo Go 等では失敗しうる)
+  // Expo push トークン取得 (Expo Go や EAS 未設定では失敗しうる)
+  const projectId = easProjectId();
+  // EAS プロジェクト ID が無いと SDK 53+ ではトークンを取得できない (eas init が必要)
+  if (projectId === undefined) {
+    throw new PushSetupError(t('settings.pushNoProjectId'));
+  }
+  // Expo Go (storeClient) では remote push トークンを取得できない → 開発ビルドが必要
+  if (Constants.executionEnvironment === 'storeClient') {
+    throw new PushSetupError(t('settings.pushExpoGo'));
+  }
   let token: string;
   try {
-    const projectId = easProjectId();
-    const result = await Notifications.getExpoPushTokenAsync(
-      projectId !== undefined ? { projectId } : undefined,
-    );
+    const result = await Notifications.getExpoPushTokenAsync({ projectId });
     token = result.data;
   } catch (e) {
     console.error('getExpoPushTokenAsync failed', e);
