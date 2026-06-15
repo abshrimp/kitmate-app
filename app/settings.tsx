@@ -359,6 +359,21 @@ export default function SettingsScreen() {
               onChange={(v) => settings.set('language', v as 'system' | 'ja' | 'en')}
             />
           </View>
+          <View style={styles.segmentBlock}>
+            <Text style={[styles.segmentLabel, { color: colors.text }]}>
+              {t('settings.fontSize')}
+            </Text>
+            <SegmentedControl
+              options={[
+                { label: t('settings.fontSmall'), value: '0.85' },
+                { label: t('settings.fontNormal'), value: '1' },
+                { label: t('settings.fontLarge'), value: '1.15' },
+                { label: t('settings.fontXLarge'), value: '1.3' },
+              ]}
+              value={String(settings.fontScale)}
+              onChange={(v) => settings.set('fontScale', Number(v))}
+            />
+          </View>
         </Card>
       </Section>
 

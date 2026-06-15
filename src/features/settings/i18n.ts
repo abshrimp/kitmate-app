@@ -82,6 +82,11 @@ export const settingsI18n = {
     langSystem: '端末に合わせる',
     langJa: '日本語',
     langEn: 'English',
+    fontSize: '文字サイズ',
+    fontSmall: '小',
+    fontNormal: '標準',
+    fontLarge: '大',
+    fontXLarge: '特大',
 
     // ===== データ =====
     deleteAllTimetable: '時間割を全削除',
@@ -175,6 +180,11 @@ export const settingsI18n = {
     langSystem: 'System',
     langJa: '日本語',
     langEn: 'English',
+    fontSize: 'Font size',
+    fontSmall: 'S',
+    fontNormal: 'M',
+    fontLarge: 'L',
+    fontXLarge: 'XL',
 
     // ===== Data =====
     deleteAllTimetable: 'Delete All Timetable Data',

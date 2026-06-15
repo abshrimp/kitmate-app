@@ -23,6 +23,7 @@ export interface SettingsState {
   lastTab: TabKey;                         // 最後に開いていたタブ (startupTab='last' 用に記録)
   homeQuickLinks: string[];                // ホームのクイックリンク (表示順, quickLinks カタログのキー)
   homeSections: string[];                  // ホームのセクション (表示順, 非表示は除外)
+  fontScale: number;                       // 文字サイズ倍率 (0.85 小 / 1 標準 / 1.15 大 / 1.3 特大)
   set: <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => void;
 }
 
@@ -44,6 +45,7 @@ export const useSettings = create<SettingsState>()(
       lastTab: 'index',
       homeQuickLinks: ['timetable', 'syllabus', 'requirements', 'map'],
       homeSections: ['weather', 'assignments', 'notices', 'schedule', 'quickLinks'],
+      fontScale: 1,
       set: (key, value) => set({ [key]: value } as unknown as Partial<SettingsState>),
     }),
     {
