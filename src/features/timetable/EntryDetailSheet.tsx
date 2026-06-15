@@ -141,7 +141,31 @@ export function EntryDetailSheet({ entry, course, onClose }: EntryDetailSheetPro
               />
             )}
             {room !== undefined && room !== '' && (
-              <InfoRow icon="location-outline" label={t('timetable.detailRoom')} value={room} />
+              mapBuildingId !== null ? (
+                <Pressable
+                  accessibilityRole="link"
+                  onPress={openMap}
+                  style={({ pressed }) => [styles.infoRow, pressed && styles.pressed]}
+                >
+                  <Ionicons
+                    name="location-outline"
+                    size={16}
+                    color={colors.textSecondary}
+                    style={styles.infoIcon}
+                  />
+                  <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
+                    {t('timetable.detailRoom')}
+                  </Text>
+                  <Text
+                    style={[styles.infoValue, styles.roomLink, { color: colors.primary }]}
+                  >
+                    {room}
+                  </Text>
+                  <Ionicons name="open-outline" size={14} color={colors.primary} />
+                </Pressable>
+              ) : (
+                <InfoRow icon="location-outline" label={t('timetable.detailRoom')} value={room} />
+              )
             )}
             {memo !== undefined && memo !== '' && (
               <InfoRow icon="document-text-outline" label={t('timetable.detailMemo')} value={memo} />
@@ -209,14 +233,6 @@ export function EntryDetailSheet({ entry, course, onClose }: EntryDetailSheetPro
             </View>
 
             <View style={styles.actions}>
-              {mapBuildingId !== null && (
-                <Button
-                  title={t('timetable.openMap')}
-                  icon="map-outline"
-                  variant="secondary"
-                  onPress={openMap}
-                />
-              )}
               {entry.courseId !== undefined && (
                 <Button
                   title={t('timetable.openSyllabus')}
@@ -292,6 +308,13 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontWeight: '500',
+  },
+  roomLink: {
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
+  pressed: {
+    opacity: 0.6,
   },
   toggleRow: {
     flexDirection: 'row',

@@ -367,7 +367,10 @@ export function CampusMap({ focusId, onBack }: { focusId?: string; onBack?: () =
         {/* 凡例 (左下フロート) */}
         {selected === null && (
           <View
-            style={[styles.legend, { backgroundColor: colors.card, borderColor: colors.border }]}
+            style={[
+              styles.legend,
+              { backgroundColor: colors.card, borderColor: colors.border, bottom: insets.bottom + 12 },
+            ]}
             pointerEvents="none"
           >
             {KIND_ORDER.map((kind) => (
@@ -384,7 +387,7 @@ export function CampusMap({ focusId, onBack }: { focusId?: string; onBack?: () =
         )}
 
         {/* ズームコントロール (右下フロート) */}
-        <View style={styles.controls} pointerEvents="box-none">
+        <View style={[styles.controls, { bottom: insets.bottom + 124 }]} pointerEvents="box-none">
           <RoundButton icon="add" label={t('map.zoomIn')} onPress={() => zoomBy(ZOOM_STEP)} />
           <RoundButton icon="remove" label={t('map.zoomOut')} onPress={() => zoomBy(1 / ZOOM_STEP)} />
           <RoundButton icon="refresh" label={t('map.reset')} onPress={resetView} />
@@ -393,7 +396,10 @@ export function CampusMap({ focusId, onBack }: { focusId?: string; onBack?: () =
         {/* 選択建物カード (下部) */}
         {selected !== null && (
           <View
-            style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+            style={[
+              styles.card,
+              { backgroundColor: colors.card, borderColor: colors.border, bottom: insets.bottom + 12 },
+            ]}
           >
             <View style={styles.cardBody}>
               <Text style={[styles.cardTitle, { color: colors.text }]} numberOfLines={1}>
