@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, Tabs } from 'expo-router';
 import { useEffect, useRef } from 'react';
 
+import { REORDERABLE_TABS, REORDERABLE_TAB_KEYS } from '@/features/settings/tabsConfig';
 import { useI18n } from '@/i18n';
 import { useSettings, type TabKey } from '@/store/settings';
 import { useTheme } from '@/theme';
@@ -18,7 +19,12 @@ const TAB_HREF: Record<TabKey, string> = {
 export default function TabsLayout() {
   const { t } = useI18n();
   const { colors } = useTheme();
+  const tabOrder = useSettings((s) => s.tabOrder);
   const appliedStartup = useRef(false);
+
+  // 表示中の並び替えタブ (設定順) → 非表示の並び替えタブ (href:null で隠す)
+  const visibleMiddle = tabOrder.filter((k) => REORDERABLE_TAB_KEYS.includes(k));
+  const hiddenMiddle = REORDERABLE_TAB_KEYS.filter((k) => !tabOrder.includes(k));
 
   // 起動時に一度だけ、設定された起動タブ (or 最後のタブ) へ切り替える
   useEffect(() => {
@@ -59,34 +65,25 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" size={size} color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="timetable"
-        options={{
-          title: t('common.tabTimetable'),
-          tabBarIcon: ({ color, size }) => <Ionicons name="calendar-outline" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="assignments"
-        options={{
-          title: t('common.tabAssignments'),
-          tabBarIcon: ({ color, size }) => <Ionicons name="checkbox-outline" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="info"
-        options={{
-          title: t('common.tabInfo'),
-          tabBarIcon: ({ color, size }) => <Ionicons name="megaphone-outline" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="links"
-        options={{
-          title: t('common.tabLinks'),
-          tabBarIcon: ({ color, size }) => <Ionicons name="link-outline" size={size} color={color} />,
-        }}
-      />
+      {/* 並び替え可能なタブ: 設定順に表示、非表示のものは href:null で隠す (ホームと「その他」は固定) */}
+      {[...visibleMiddle, ...hiddenMiddle].map((key) => {
+        const def = REORDERABLE_TABS.find((tab) => tab.key === key);
+        if (def === undefined) return null;
+        const hidden = !visibleMiddle.includes(key);
+        return (
+          <Tabs.Screen
+            key={key}
+            name={key}
+            options={{
+              title: t(def.titleKey),
+              href: hidden ? null : undefined,
+              tabBarIcon: ({ color, size }) => (
+                <Ionicons name={def.icon} size={size} color={color} />
+              ),
+            }}
+          />
+        );
+      })}
       <Tabs.Screen
         name="more"
         options={{

@@ -21,6 +21,7 @@ export interface SettingsState {
   lectureInfoNotifications: boolean;       // 授業関連連絡 push 通知 (default false)
   startupTab: 'last' | TabKey;             // 起動時に開くタブ ('last' = 最後に開いていたタブ)
   lastTab: TabKey;                         // 最後に開いていたタブ (startupTab='last' 用に記録)
+  tabOrder: TabKey[];                      // 並び替え可能なタブ(時間割/課題/お知らせ/リンク)の表示順。除外=非表示
   homeQuickLinks: string[];                // ホームのクイックリンク (表示順, quickLinks カタログのキー)
   homeSections: string[];                  // ホームのセクション (表示順, 非表示は除外)
   fontScale: number;                       // 文字サイズ倍率 (0.85 小 / 1 標準 / 1.15 大 / 1.3 特大)
@@ -45,6 +46,7 @@ export const useSettings = create<SettingsState>()(
       lectureInfoNotifications: false,
       startupTab: 'index',
       lastTab: 'index',
+      tabOrder: ['timetable', 'assignments', 'info', 'links'],
       homeQuickLinks: ['timetable', 'syllabus', 'requirements', 'map'],
       homeSections: ['weather', 'assignments', 'notices', 'schedule', 'quickLinks'],
       fontScale: 1,
@@ -65,6 +67,9 @@ export const useSettings = create<SettingsState>()(
             typeof s.assignmentNotifyHoursBefore === 'number'
               ? [s.assignmentNotifyHoursBefore]
               : [24];
+        }
+        if (!Array.isArray(s.tabOrder)) {
+          s.tabOrder = ['timetable', 'assignments', 'info', 'links'];
         }
         return s as unknown as SettingsState;
       },

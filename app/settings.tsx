@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Platform, StyleSheet, Switch, Text, View } from 'react-native';
 
@@ -90,6 +91,7 @@ function SelectRow({ title, value, onPress }: { title: string; value: string; on
 export default function SettingsScreen() {
   const { t } = useI18n();
   const { colors } = useTheme();
+  const router = useRouter();
   const settings = useSettings();
 
   const [modal, setModal] = useState<ModalKind>(null);
@@ -267,6 +269,12 @@ export default function SettingsScreen() {
             title={t('settings.startupTab')}
             value={startupTabLabel()}
             onPress={() => setModal('startupTab')}
+          />
+          <ListItem
+            icon="apps-outline"
+            title={t('settings.editTabs')}
+            right={<Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />}
+            onPress={() => router.push('/tabs-edit')}
           />
         </Card>
       </Section>
