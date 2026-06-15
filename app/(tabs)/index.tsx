@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Badge, Button, Card, EmptyState, ListItem, Screen, Section, type IoniconsName } from '@/components/ui';
+import { Badge, Button, Card, EmptyState, ListItem, Screen, Section } from '@/components/ui';
 import { parseDateLocal, subjectMatchesAny } from '@/features/cancellations/feed';
 import { useCancellationFeed } from '@/features/cancellations/useCancellationFeed';
 import { useMyCourseNames } from '@/features/cancellations/useMyCourseNames';
@@ -11,8 +11,10 @@ import { formatTime } from '@/features/assignments/format';
 import { formatRemaining } from '@/features/assignments/remaining';
 import { useAssignments } from '@/features/assignments/useAssignments';
 import { eventLabel, formatEventDate, upcomingEvents } from '@/features/home/academicCalendar';
+import { quickLinkDef } from '@/features/home/quickLinks';
 import { useWeather, weatherIcon } from '@/features/home/useWeather';
 import { useI18n } from '@/i18n';
+import { useSettings } from '@/store/settings';
 import { useAuth } from '@/store/auth';
 import { useTheme } from '@/theme';
 import type { AssignmentEvent, CancellationNotice, LectureNotice } from '@/types';
@@ -25,14 +27,6 @@ function greetingKey(hour: number): string {
   if (hour < 18) return 'home.greetingAfternoon';
   return 'home.greetingEvening';
 }
-
-/** クイックリンク定義 (色分けされたアイコンで一覧性を高める) */
-const QUICK_LINKS: { key: string; icon: IoniconsName; tone: 'primary' | 'accent'; route: '/timetable' | '/syllabus' | '/requirements' | '/map' }[] = [
-  { key: 'home.quickTimetable', icon: 'calendar-outline', tone: 'primary', route: '/timetable' },
-  { key: 'home.quickSyllabus', icon: 'document-text-outline', tone: 'accent', route: '/syllabus' },
-  { key: 'home.quickRequirements', icon: 'school-outline', tone: 'primary', route: '/requirements' },
-  { key: 'home.quickMap', icon: 'map-outline', tone: 'accent', route: '/map' },
-];
 
 /** 休講通知 / 授業関連連絡 を表示順にそろえた共通の型 */
 type FeedItem =
@@ -48,6 +42,7 @@ export default function HomeScreen() {
   const { t } = useI18n();
   const { colors } = useTheme();
   const router = useRouter();
+  const quickLinks = useSettings((s) => s.homeQuickLinks);
 
   // 画面表示時の現在時刻を一度だけ確定させる (挨拶・日付・残り時間表示用)
   const [now] = useState(() => Date.now());
@@ -99,19 +94,36 @@ export default function HomeScreen() {
 
       <UpcomingSchedule now={now} />
 
-      <Section title={t('home.quickLinksTitle')}>
+      <Section
+        title={t('home.quickLinksTitle')}
+        right={
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('home.editQuickLinks')}
+            onPress={() => router.push('/home/quick-links')}
+            hitSlop={6}
+          >
+            <Text style={[styles.seeAll, { color: colors.primary }]}>{t('home.edit')}</Text>
+          </Pressable>
+        }
+      >
         <Card style={styles.listCard}>
-          {QUICK_LINKS.map((link, index) => (
-            <View key={link.route}>
-              {index > 0 && <View style={[styles.separator, { backgroundColor: colors.border }]} />}
-              <ListItem
-                icon={link.icon}
-                iconColor={link.tone === 'accent' ? colors.accent : colors.primary}
-                title={t(link.key)}
-                onPress={() => router.push(link.route)}
-              />
-            </View>
-          ))}
+          {quickLinks
+            .map((key) => quickLinkDef(key))
+            .filter((def): def is NonNullable<typeof def> => def !== undefined)
+            .map((def, index) => (
+              <View key={def.key}>
+                {index > 0 && (
+                  <View style={[styles.separator, { backgroundColor: colors.border }]} />
+                )}
+                <ListItem
+                  icon={def.icon}
+                  iconColor={index % 2 === 1 ? colors.accent : colors.primary}
+                  title={t(def.labelKey)}
+                  onPress={() => router.push(def.route)}
+                />
+              </View>
+            ))}
         </Card>
       </Section>
     </Screen>

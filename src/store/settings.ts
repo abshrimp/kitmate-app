@@ -21,6 +21,7 @@ export interface SettingsState {
   lectureInfoNotifications: boolean;       // 授業関連連絡 push 通知 (default false)
   startupTab: 'last' | TabKey;             // 起動時に開くタブ ('last' = 最後に開いていたタブ)
   lastTab: TabKey;                         // 最後に開いていたタブ (startupTab='last' 用に記録)
+  homeQuickLinks: string[];                // ホームのクイックリンク (表示順, quickLinks カタログのキー)
   set: <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => void;
 }
 
@@ -40,6 +41,7 @@ export const useSettings = create<SettingsState>()(
       lectureInfoNotifications: false,
       startupTab: 'index',
       lastTab: 'index',
+      homeQuickLinks: ['timetable', 'syllabus', 'requirements', 'map'],
       set: (key, value) => set({ [key]: value } as unknown as Partial<SettingsState>),
     }),
     {
