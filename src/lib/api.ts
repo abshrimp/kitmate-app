@@ -104,6 +104,20 @@ export async function fetchCancellations(): Promise<CancellationFeed> {
   return apiFetch<CancellationFeed>('/api/cancellations');
 }
 
+// ===== announcements (運営お知らせ) =====
+
+export interface Announcement {
+  id: number;
+  title: string;
+  body: string;
+  createdAt: number; // unix ms
+}
+
+export async function fetchAnnouncements(): Promise<Announcement[]> {
+  const res = await apiFetch<{ announcements: Announcement[] }>('/api/announcements');
+  return res.announcements;
+}
+
 // ===== share =====
 
 export async function createShare(timetable: SharedTimetable): Promise<{ id: string }> {

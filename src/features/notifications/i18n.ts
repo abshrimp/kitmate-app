@@ -6,6 +6,7 @@ export const notificationsI18n = {
     clear: '履歴を消去',
     clearConfirmTitle: '通知履歴を消去しますか?',
     clearConfirmMessage: '保存された通知履歴をすべて削除します。',
+    announcementBadge: '運営',
     timeFormat: '{m}/{d} {time}',
   },
   en: {
@@ -15,6 +16,7 @@ export const notificationsI18n = {
     clear: 'Clear history',
     clearConfirmTitle: 'Clear notification history?',
     clearConfirmMessage: 'All saved notifications will be removed.',
+    announcementBadge: 'Official',
     timeFormat: '{m}/{d} {time}',
   },
 } as const;
