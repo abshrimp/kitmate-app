@@ -86,15 +86,6 @@ export function NotifyTimingPicker({ value, onChange }: NotifyTimingPickerProps)
           </Pressable>
         ))}
       </View>
-      <SegmentedControl
-        options={[
-          { label: t('settings.unitMinute'), value: 'm' },
-          { label: t('settings.unitHour'), value: 'h' },
-          { label: t('settings.unitDay'), value: 'd' },
-        ]}
-        value={unit}
-        onChange={(v) => setUnit(v as Unit)}
-      />
       <View style={styles.customRow}>
         <View style={styles.customInput}>
           <TextField
@@ -102,6 +93,17 @@ export function NotifyTimingPicker({ value, onChange }: NotifyTimingPickerProps)
             onChangeText={setCustom}
             keyboardType="number-pad"
             placeholder={t('settings.notifyCustomPlaceholder')}
+          />
+        </View>
+        <View style={styles.unitWrap}>
+          <SegmentedControl
+            options={[
+              { label: t('settings.unitMinute'), value: 'm' },
+              { label: t('settings.unitHour'), value: 'h' },
+              { label: t('settings.unitDay'), value: 'd' },
+            ]}
+            value={unit}
+            onChange={(v) => setUnit(v as Unit)}
           />
         </View>
         <Pressable
@@ -158,6 +160,9 @@ const styles = StyleSheet.create({
   },
   customInput: {
     flex: 1,
+  },
+  unitWrap: {
+    width: 138,
   },
   addButton: {
     width: 40,

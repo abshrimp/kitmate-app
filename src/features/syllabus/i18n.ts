@@ -2,6 +2,7 @@ export const syllabusI18n = {
   ja: {
     searchTitle: 'シラバス',
     searchPlaceholder: '科目名・教員名・科目番号で検索',
+    refine: '絞り込み',
     filterSemester: '学期',
     filterGrade: '年次',
     filterDay: '曜日',
@@ -88,6 +89,7 @@ export const syllabusI18n = {
   en: {
     searchTitle: 'Syllabus',
     searchPlaceholder: 'Search by course, instructor, or number',
+    refine: 'Filters',
     filterSemester: 'Semester',
     filterGrade: 'Year',
     filterDay: 'Day',

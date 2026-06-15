@@ -62,6 +62,13 @@ export default function SyllabusSearchScreen() {
   const [day, setDay] = useState<DayFilter>('all');
   const [category, setCategory] = useState<CategoryFilter>('all');
   const [categoryModal, setCategoryModal] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const activeFilterCount =
+    (semester !== 'all' ? 1 : 0) +
+    (grade !== 'all' ? 1 : 0) +
+    (day !== 'all' ? 1 : 0) +
+    (category !== 'all' ? 1 : 0);
 
   const [courses, setCourses] = useState<Course[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -70,10 +77,10 @@ export default function SyllabusSearchScreen() {
   const requestSeq = useRef(0);
 
   useEffect(() => {
-    const seq = ++requestSeq.current;
-    setLoading(true);
-    setFailed(false);
     const timer = setTimeout(() => {
+      const seq = ++requestSeq.current;
+      setLoading(true);
+      setFailed(false);
       const q = keyword.trim();
       fetchCourses({
         ...(q !== '' ? { q } : {}),
@@ -135,62 +142,90 @@ export default function SyllabusSearchScreen() {
           onChangeText={setKeyword}
           placeholder={t('syllabus.searchPlaceholder')}
         />
-        <View style={styles.filterRow}>
-          <Text style={[styles.filterLabel, { color: colors.textSecondary }]}>
-            {t('syllabus.filterSemester')}
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => setFiltersOpen((o) => !o)}
+          style={({ pressed }) => [styles.refineToggle, pressed && styles.pressed]}
+          hitSlop={6}
+        >
+          <Ionicons name="options-outline" size={16} color={colors.primary} />
+          <Text style={[styles.refineLabel, { color: colors.primary }]}>
+            {t('syllabus.refine')}
           </Text>
-          <View style={styles.filterControl}>
-            <SegmentedControl
-              options={semesterOptions}
-              value={semester}
-              onChange={(v) => setSemester(v as SemesterFilter)}
-            />
-          </View>
-        </View>
-        <View style={styles.filterRow}>
-          <Text style={[styles.filterLabel, { color: colors.textSecondary }]}>
-            {t('syllabus.filterGrade')}
-          </Text>
-          <View style={styles.filterControl}>
-            <SegmentedControl
-              options={gradeOptions}
-              value={grade}
-              onChange={(v) => setGrade(v as GradeFilter)}
-            />
-          </View>
-        </View>
-        <View style={styles.filterRow}>
-          <Text style={[styles.filterLabel, { color: colors.textSecondary }]}>
-            {t('syllabus.filterDay')}
-          </Text>
-          <View style={styles.filterControl}>
-            <SegmentedControl
-              options={dayOptions}
-              value={day}
-              onChange={(v) => setDay(v as DayFilter)}
-            />
-          </View>
-        </View>
-        {canFilterCategory && (
-          <View style={styles.filterRow}>
-            <Text style={[styles.filterLabel, { color: colors.textSecondary }]}>
-              {t('syllabus.filterCategory')}
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => setCategoryModal(true)}
-              style={({ pressed }) => [
-                styles.categorySelect,
-                { borderColor: colors.border, backgroundColor: colors.card },
-                pressed && styles.pressed,
-              ]}
-            >
-              <Text style={[styles.categoryValue, { color: colors.text }]} numberOfLines={1}>
-                {t(categoryLabelText.labelKey)}
+          {activeFilterCount > 0 && (
+            <View style={[styles.refineCount, { backgroundColor: colors.primary }]}>
+              <Text style={[styles.refineCountText, { color: colors.onPrimary }]}>
+                {activeFilterCount}
               </Text>
-              <Ionicons name="chevron-down" size={16} color={colors.textSecondary} />
-            </Pressable>
-          </View>
+            </View>
+          )}
+          <Ionicons
+            name={filtersOpen ? 'chevron-up' : 'chevron-down'}
+            size={16}
+            color={colors.textSecondary}
+            style={styles.refineChevron}
+          />
+        </Pressable>
+        {filtersOpen && (
+          <>
+            <View style={styles.filterRow}>
+              <Text style={[styles.filterLabel, { color: colors.textSecondary }]}>
+                {t('syllabus.filterSemester')}
+              </Text>
+              <View style={styles.filterControl}>
+                <SegmentedControl
+                  options={semesterOptions}
+                  value={semester}
+                  onChange={(v) => setSemester(v as SemesterFilter)}
+                />
+              </View>
+            </View>
+            <View style={styles.filterRow}>
+              <Text style={[styles.filterLabel, { color: colors.textSecondary }]}>
+                {t('syllabus.filterGrade')}
+              </Text>
+              <View style={styles.filterControl}>
+                <SegmentedControl
+                  options={gradeOptions}
+                  value={grade}
+                  onChange={(v) => setGrade(v as GradeFilter)}
+                />
+              </View>
+            </View>
+            <View style={styles.filterRow}>
+              <Text style={[styles.filterLabel, { color: colors.textSecondary }]}>
+                {t('syllabus.filterDay')}
+              </Text>
+              <View style={styles.filterControl}>
+                <SegmentedControl
+                  options={dayOptions}
+                  value={day}
+                  onChange={(v) => setDay(v as DayFilter)}
+                />
+              </View>
+            </View>
+            {canFilterCategory && (
+              <View style={styles.filterRow}>
+                <Text style={[styles.filterLabel, { color: colors.textSecondary }]}>
+                  {t('syllabus.filterCategory')}
+                </Text>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => setCategoryModal(true)}
+                  style={({ pressed }) => [
+                    styles.categorySelect,
+                    { borderColor: colors.border, backgroundColor: colors.card },
+                    pressed && styles.pressed,
+                  ]}
+                >
+                  <Text style={[styles.categoryValue, { color: colors.text }]} numberOfLines={1}>
+                    {t(categoryLabelText.labelKey)}
+                  </Text>
+                  <Ionicons name="chevron-down" size={16} color={colors.textSecondary} />
+                </Pressable>
+              </View>
+            )}
+          </>
         )}
       </View>
 
@@ -257,6 +292,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 8,
     gap: 8,
+  },
+  refineToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 4,
+    paddingHorizontal: 2,
+  },
+  refineLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  refineCount: {
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 5,
+  },
+  refineCountText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  refineChevron: {
+    marginLeft: 'auto',
   },
   filterRow: {
     flexDirection: 'row',
