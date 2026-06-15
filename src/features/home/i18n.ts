@@ -31,7 +31,7 @@ export const homeI18n = {
     assignmentsEmpty: '提出間近の課題はありません',
     assignmentsLoginPrompt: 'ログインすると課題を表示できます',
     assignmentsLogin: 'ログイン',
-    dueOn: '{m}/{d} {time} 締切',
+    dueOn: '{m}/{d}({w}) {time} 締切',
     overdue: '期限切れ',
     // 休講・連絡セクション
     noticesTitle: '最近の休講・連絡',
@@ -76,7 +76,7 @@ export const homeI18n = {
     assignmentsEmpty: 'No assignments due soon',
     assignmentsLoginPrompt: 'Log in to see your assignments',
     assignmentsLogin: 'Log in',
-    dueOn: 'Due {m}/{d} {time}',
+    dueOn: 'Due {m}/{d} ({w}) {time}',
     overdue: 'Overdue',
     noticesTitle: 'Recent notices',
     noticesSeeAll: 'See all',

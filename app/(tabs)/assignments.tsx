@@ -19,6 +19,7 @@ import { calendarDaysFrom, formatTime, startOfDay, stripHtml } from '@/features/
 import { formatRemaining } from '@/features/assignments/remaining';
 import { useAssignments } from '@/features/assignments/useAssignments';
 import { useI18n, type I18n } from '@/i18n';
+import { useNowMinute } from '@/lib/useNow';
 import { useAuth } from '@/store/auth';
 import { useTheme } from '@/theme';
 import type { AssignmentEvent } from '@/types';
@@ -45,8 +46,7 @@ export default function AssignmentsScreen() {
   const wstoken = useAuth((s) => s.wstoken);
   const { events, status, reload, refresh } = useAssignments();
   const [selected, setSelected] = useState<AssignmentEvent | null>(null);
-  // 画面表示時の現在時刻を一度だけ確定 (残り時間表示用・レンダーの純粋性を保つ)
-  const [now] = useState(() => Date.now());
+  const now = useNowMinute(); // 残り時間をリアルタイム(分ごと)に更新
 
   const sections = useMemo<AssignmentSection[]>(() => {
     const todayStart = startOfDay(new Date());
@@ -231,7 +231,7 @@ export default function AssignmentsScreen() {
       <Modal
         visible={selected !== null}
         transparent
-        animationType="slide"
+        animationType="fade"
         onRequestClose={() => setSelected(null)}
       >
         <Pressable

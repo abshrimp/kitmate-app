@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Fragment, useMemo, useState, type ReactNode } from 'react';
+import { Fragment, useMemo, type ReactNode } from 'react';
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Badge, Button, Card, EmptyState, ListItem, Screen, Section } from '@/components/ui';
@@ -14,6 +14,7 @@ import { eventLabel, formatEventDate, upcomingEvents } from '@/features/home/aca
 import { quickLinkDef } from '@/features/home/quickLinks';
 import { useWeather, weatherIcon } from '@/features/home/useWeather';
 import { useI18n } from '@/i18n';
+import { useNowMinute } from '@/lib/useNow';
 import { useSettings } from '@/store/settings';
 import { useAuth } from '@/store/auth';
 import { useTheme } from '@/theme';
@@ -44,8 +45,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const sections = useSettings((s) => s.homeSections);
 
-  // 画面表示時の現在時刻を一度だけ確定させる (挨拶・日付・残り時間表示用)
-  const [now] = useState(() => Date.now());
+  const now = useNowMinute(); // 残り時間をリアルタイム(分ごと)に更新
   const today = new Date(now);
 
   const greeting = t(greetingKey(today.getHours()));
@@ -66,7 +66,7 @@ export default function HomeScreen() {
 
   return (
     <Screen
-      title={greeting}
+      title={t('common.appName')}
       left={
         <Pressable
           accessibilityRole="button"
@@ -90,6 +90,7 @@ export default function HomeScreen() {
         </Pressable>
       }
     >
+      <Text style={[styles.greeting, { color: colors.text }]}>{greeting}</Text>
       <View style={styles.dateRow}>
         <Ionicons name="calendar-clear-outline" size={14} color={colors.textSecondary} />
         <Text style={[styles.dateLine, { color: colors.textSecondary }]}>{dateLine}</Text>
@@ -113,8 +114,9 @@ function AssignmentsPreview({ now, onSeeAll }: { now: number; onSeeAll: () => vo
 
   // web はログイン機能なし (仕様) → 課題セクションは出さない
   const enabled = Platform.OS !== 'web';
-  const { events } = useAssignments();
+  const { events, status } = useAssignments();
   const preview = events.slice(0, PREVIEW_COUNT);
+  const loading = status === 'loading' && events.length === 0;
 
   if (!enabled) return null;
 
@@ -150,7 +152,14 @@ function AssignmentsPreview({ now, onSeeAll }: { now: number; onSeeAll: () => vo
         ) : undefined
       }
     >
-      {preview.length === 0 ? (
+      {loading ? (
+        <Card style={styles.loadingCard}>
+          <ActivityIndicator size="small" color={colors.primary} />
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+            {t('common.loading')}
+          </Text>
+        </Card>
+      ) : preview.length === 0 ? (
         <Card>
           <EmptyState icon="checkmark-done-outline" title={t('home.assignmentsEmpty')} />
         </Card>
@@ -199,6 +208,7 @@ function AssignmentRow({
             {t('home.dueOn', {
               m: new Date(event.timesort * 1000).getMonth() + 1,
               d: new Date(event.timesort * 1000).getDate(),
+              w: t(`assignments.weekday${new Date(event.timesort * 1000).getDay()}`),
               time: formatTime(event.timesort),
             })}
           </Text>
@@ -438,13 +448,18 @@ function UpcomingSchedule({ now }: { now: number }) {
 }
 
 const styles = StyleSheet.create({
+  greeting: {
+    fontSize: 22,
+    fontWeight: '700',
+    paddingHorizontal: 4,
+    marginBottom: 2,
+  },
   dateRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: 4,
-    marginTop: -4,
-    marginBottom: 4,
+    marginBottom: 8,
   },
   dateLine: {
     fontSize: 15,
