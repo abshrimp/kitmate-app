@@ -4,13 +4,11 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { BrandMark, Card, ListItem, Screen } from '@/components/ui';
 import { useI18n } from '@/i18n';
-import { useAuth } from '@/store/auth';
 import { useTheme } from '@/theme';
 
 export default function MoreScreen() {
   const { t } = useI18n();
   const { colors } = useTheme();
-  const siteInfo = useAuth((s) => s.siteInfo);
 
   const version = Constants.expoConfig?.version ?? '1.0.0';
   const menu = [
@@ -34,14 +32,6 @@ export default function MoreScreen() {
             />
           </View>
         ))}
-        <View style={[styles.separator, { backgroundColor: colors.border }]} />
-        <ListItem
-          icon="person-circle-outline"
-          iconColor={colors.primary}
-          title={t('settings.menuAccount')}
-          subtitle={siteInfo !== null ? siteInfo.fullname : t('common.notLoggedIn')}
-          onPress={() => router.push('/login')}
-        />
       </Card>
       <View style={styles.footer}>
         <BrandMark icon="school" size={56} />
