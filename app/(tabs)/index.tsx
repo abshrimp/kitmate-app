@@ -13,6 +13,7 @@ import { useAssignments } from '@/features/assignments/useAssignments';
 import { eventLabel, formatEventDate, upcomingEvents } from '@/features/home/academicCalendar';
 import { quickLinkDef } from '@/features/home/quickLinks';
 import { useWeather, weatherIcon } from '@/features/home/useWeather';
+import { useHasUnreadNotifications } from '@/features/notifications/useUnread';
 import { useI18n } from '@/i18n';
 import { useNowMinute } from '@/lib/useNow';
 import { useSettings } from '@/store/settings';
@@ -44,6 +45,7 @@ export default function HomeScreen() {
   const { colors } = useTheme();
   const router = useRouter();
   const sections = useSettings((s) => s.homeSections);
+  const hasUnread = useHasUnreadNotifications();
 
   const now = useNowMinute(); // 残り時間をリアルタイム(分ごと)に更新
   const today = new Date(now);
@@ -87,6 +89,11 @@ export default function HomeScreen() {
           style={({ pressed }) => pressed && styles.pressed}
         >
           <Ionicons name="notifications-outline" size={26} color={colors.primary} />
+          {hasUnread && (
+            <View
+              style={[styles.notifBadge, { backgroundColor: colors.danger, borderColor: colors.background }]}
+            />
+          )}
         </Pressable>
       }
     >
@@ -447,6 +454,15 @@ function UpcomingSchedule({ now }: { now: number }) {
 }
 
 const styles = StyleSheet.create({
+  notifBadge: {
+    position: 'absolute',
+    top: -1,
+    right: -1,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 1.5,
+  },
   greeting: {
     fontSize: 22,
     fontWeight: '700',

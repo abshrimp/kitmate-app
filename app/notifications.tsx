@@ -49,6 +49,8 @@ export default function NotificationsScreen() {
     };
   }, []);
 
+  const markSeen = useNotificationHistory((s) => s.markSeen);
+
   const items = useMemo<DisplayItem[]>(() => {
     const annKeys = new Set(announcements.map((a) => `${a.title}\n${a.body}`));
     const annItems: DisplayItem[] = announcements.map((a) => ({
@@ -63,6 +65,11 @@ export default function NotificationsScreen() {
       .map((x) => ({ ...x, isAnnouncement: false }));
     return [...annItems, ...localItems].sort((a, b) => b.receivedAt - a.receivedAt);
   }, [local, announcements]);
+
+  // 開いたら最新の通知時刻まで既読にする (ホームのバッジを消す)
+  useEffect(() => {
+    if (items.length > 0) markSeen(items[0].receivedAt);
+  }, [items, markSeen]);
 
   const onClear = async () => {
     const ok = await confirmAsync({
