@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
-import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Platform, StyleSheet, Switch, Text, View } from 'react-native';
 
@@ -92,7 +91,6 @@ export default function SettingsScreen() {
   const { t } = useI18n();
   const { colors } = useTheme();
   const settings = useSettings();
-  const router = useRouter();
 
   const [modal, setModal] = useState<ModalKind>(null);
   const [pushBusy, setPushBusy] = useState(false);
@@ -269,12 +267,6 @@ export default function SettingsScreen() {
             title={t('settings.startupTab')}
             value={startupTabLabel()}
             onPress={() => setModal('startupTab')}
-          />
-          <ListItem
-            icon="home-outline"
-            title={t('home.editHome')}
-            right={<Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />}
-            onPress={() => router.push('/home/edit')}
           />
         </Card>
       </Section>

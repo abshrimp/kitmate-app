@@ -107,6 +107,18 @@ export default function HomeScreen() {
         const el = sectionMap[key];
         return el === undefined ? null : <Fragment key={key}>{el}</Fragment>;
       })}
+
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => router.push('/home/edit')}
+        hitSlop={6}
+        style={({ pressed }) => [styles.customizeLink, pressed && styles.pressed]}
+      >
+        <Ionicons name="options-outline" size={16} color={colors.textSecondary} />
+        <Text style={[styles.customizeText, { color: colors.textSecondary }]}>
+          {t('home.editHome')}
+        </Text>
+      </Pressable>
     </Screen>
   );
 }
@@ -571,6 +583,19 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.7,
+  },
+  customizeLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 24,
+    marginBottom: 8,
+    paddingVertical: 8,
+  },
+  customizeText: {
+    fontSize: 13,
+    fontWeight: '600',
   },
   rowBody: {
     flex: 1,
