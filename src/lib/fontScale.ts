@@ -1,20 +1,17 @@
 import { createElement, type ComponentType } from 'react';
 import { StyleSheet, type StyleProp, type TextStyle } from 'react-native';
 
+import { useSettings } from '@/store/settings';
+
 // アプリ全体の文字サイズ倍率。
-// この RN では Text が「素の関数コンポーネント」なので Text.render はパッチできない。
-// 代わりに react-native モジュールの Text エクスポートをスケール適用ラッパーへ差し替える。
-// RN の index は Text を遅延 getter で公開しているため、単純代入ではなく
-// Object.defineProperty で getter ごと上書きする。
-// named import はモジュールのプロパティへのライブ参照のため、各ファイルの Text も差し替わる。
-// 全 Text に介入するため、異常時は元の Text をそのまま描画して安全側に倒す。
+// この RN では Text が「素の関数コンポーネント」で .render を持たないため、react-native の
+// Text エクスポートをスケール適用ラッパーへ差し替える (RN は Text を遅延 getter で公開する
+// ため Object.defineProperty で getter ごと上書き)。named import はライブ参照のため全 Text が
+// ラッパー経由になる。ラッパー自身が fontScale を購読するので、変更時は全 Text が再描画され
+// (再マウント不要で) 即時反映される。入れ子 Text の継承を壊さないよう、明示的に fontSize を
+// 持つ Text のみスケールする。異常時は元の Text をそのまま描画して安全側に倒す。
 
-let globalFontScale = 1;
 let patched = false;
-
-export function setGlobalFontScale(scale: number): void {
-  globalFontScale = scale;
-}
 
 interface TextProps {
   style?: StyleProp<TextStyle>;
@@ -39,12 +36,16 @@ export function installFontScalePatch(): void {
   patched = true;
 
   const ScaledText: ComponentType<TextProps> = (props: TextProps) => {
-    if (globalFontScale === 1) return createElement(Original, props);
+    const scale = useSettings((s) => s.fontScale); // 各 Text が購読 → 変更時に再描画
+    if (scale === 1) return createElement(Original, props);
     try {
-      const flat = (StyleSheet.flatten(props.style) ?? {}) as TextStyle;
-      const base = typeof flat.fontSize === 'number' ? flat.fontSize : 14;
-      const scaled: TextStyle = { fontSize: Math.round(base * globalFontScale * 100) / 100 };
-      if (typeof flat.lineHeight === 'number') scaled.lineHeight = flat.lineHeight * globalFontScale;
+      const flat = StyleSheet.flatten(props.style) as TextStyle | undefined;
+      // 明示的に fontSize を持つ Text のみスケール (入れ子 Text の継承を壊さない)
+      if (flat === undefined || typeof flat.fontSize !== 'number') {
+        return createElement(Original, props);
+      }
+      const scaled: TextStyle = { fontSize: Math.round(flat.fontSize * scale * 100) / 100 };
+      if (typeof flat.lineHeight === 'number') scaled.lineHeight = flat.lineHeight * scale;
       return createElement(Original, { ...props, style: [props.style, scaled] });
     } catch {
       return createElement(Original, props);
