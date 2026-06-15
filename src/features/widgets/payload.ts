@@ -23,6 +23,7 @@ export interface WidgetAssignment {
   course: string;
   dueAt: number; // unix 秒
   dueLabel: string; // 例 "6/15 23:59"
+  remainingLabel: string; // 例 "あと3時間" (書き出し時点。iOS はライブ表示も併用)
 }
 
 /** ホーム画面ウィジェットへ渡す共有ペイロード (iOS/Android 共通) */
@@ -76,8 +77,22 @@ export function buildTodayClasses(
     });
 }
 
+/** 締切までの残り時間を「あとX分/時間/日」で表す (期限超過は「期限切れ」)。 */
+export function remainingLabel(dueAtSec: number, nowMs: number): string {
+  const diffMs = dueAtSec * 1000 - nowMs;
+  if (diffMs <= 0) return '期限切れ';
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 60) return `あと${mins}分`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `あと${hours}時間`;
+  return `あと${Math.floor(hours / 24)}日`;
+}
+
 /** 締切が一番近い (未提出の) 課題を 1 件返す */
-export function buildNextAssignment(events: AssignmentEvent[]): WidgetAssignment | null {
+export function buildNextAssignment(
+  events: AssignmentEvent[],
+  nowMs: number,
+): WidgetAssignment | null {
   const sorted = [...events].sort((a, b) => a.timesort - b.timesort);
   const first = sorted[0];
   if (first === undefined) return null;
@@ -90,6 +105,7 @@ export function buildNextAssignment(events: AssignmentEvent[]): WidgetAssignment
     course: first.courseFullname,
     dueAt: first.timesort,
     dueLabel,
+    remainingLabel: remainingLabel(first.timesort, nowMs),
   };
 }
 

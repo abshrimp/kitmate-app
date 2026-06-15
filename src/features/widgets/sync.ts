@@ -5,8 +5,13 @@ import type { WidgetPayload } from './payload';
 
 /** ウィジェットが読む共有ペイロードの保存キー。 */
 export const WIDGET_PAYLOAD_KEY = 'kitmate.widget.payload';
-/** ウィジェット名 (react-native-android-widget の widgetName と一致させる)。 */
-export const WIDGET_NAME = 'KitmateWidget';
+
+/** ウィジェット名 (Android: app.json の widgetName / iOS: Swift の kind と一致させる)。 */
+export const WIDGET_NAMES = {
+  timetable: 'KitmateTimetable',
+  assignmentDue: 'KitmateAssignmentDue',
+  assignmentRemaining: 'KitmateAssignmentRemaining',
+} as const;
 
 /**
  * ペイロードを共有ストレージへ保存し、ネイティブ側ウィジェットの再描画を要求する。

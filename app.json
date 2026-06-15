@@ -47,9 +47,31 @@
         {
           "widgets": [
             {
-              "name": "KitmateWidget",
-              "label": "KITmate",
-              "description": "今日の時間割と直近の課題",
+              "name": "KitmateTimetable",
+              "label": "KITmate 時間割",
+              "description": "今日の時間割 (1〜5限)",
+              "minWidth": "180dp",
+              "minHeight": "180dp",
+              "targetCellWidth": 3,
+              "targetCellHeight": 3,
+              "updatePeriodMillis": 1800000,
+              "resizeMode": "horizontal|vertical"
+            },
+            {
+              "name": "KitmateAssignmentDue",
+              "label": "KITmate 課題の締切",
+              "description": "直近の課題の締切日時",
+              "minWidth": "180dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 3,
+              "targetCellHeight": 2,
+              "updatePeriodMillis": 1800000,
+              "resizeMode": "horizontal|vertical"
+            },
+            {
+              "name": "KitmateAssignmentRemaining",
+              "label": "KITmate 課題まで",
+              "description": "直近の課題までの残り時間",
               "minWidth": "180dp",
               "minHeight": "110dp",
               "targetCellWidth": 3,

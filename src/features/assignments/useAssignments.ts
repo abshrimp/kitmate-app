@@ -38,7 +38,7 @@ export function useAssignments(): UseAssignmentsResult {
         setEvents(sorted);
         setStatus('ready');
         // ホーム画面ウィジェット用に直近の課題を共有
-        useWidgetData.getState().setAssignment(buildNextAssignment(sorted));
+        useWidgetData.getState().setAssignment(buildNextAssignment(sorted, Date.now()));
         // 通知の再スケジュール (失敗しても UI には影響させない)
         void syncAssignmentNotifications(sorted);
       } catch (e) {
