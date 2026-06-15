@@ -2,7 +2,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
-import { Badge, Button, Card, EmptyState, Screen, Section } from '@/components/ui';
+import { Badge, Button, Card, Chip, EmptyState, Screen, Section } from '@/components/ui';
 import { CollapsibleText } from '@/features/syllabus/CollapsibleText';
 import {
   buildTimetableEntries,
@@ -168,11 +168,18 @@ export default function SyllabusDetailScreen() {
         <Text style={[styles.headerInstructors, { color: colors.textSecondary }]}>
           {course.instructors.join(t('syllabus.instructorSeparator'))}
         </Text>
-        {!course.offeredThisYear && (
-          <View style={styles.headerBadgeRow}>
+        <View style={styles.headerChips}>
+          <Chip icon="calendar-outline" label={termLabel(t, course.term)} />
+          <Chip icon="time-outline" label={slotsLabel(t, course)} />
+          <Chip icon="ribbon-outline" label={t('common.credits', { n: course.credits })} />
+          <Chip icon="school-outline" label={t('common.grade', { n: course.targetGrade })} />
+          {course.room !== undefined && course.room !== '' && (
+            <Chip icon="location-outline" label={course.room} />
+          )}
+          {!course.offeredThisYear && (
             <Badge label={t('syllabus.notOffered')} color={colors.warning} />
-          </View>
-        )}
+          )}
+        </View>
         <View style={styles.addArea}>
           {alreadyAdded ? (
             <Button
@@ -295,8 +302,12 @@ const styles = StyleSheet.create({
   headerInstructors: {
     fontSize: 14,
   },
-  headerBadgeRow: {
+  headerChips: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 2,
   },
   addArea: {
     marginTop: 10,
