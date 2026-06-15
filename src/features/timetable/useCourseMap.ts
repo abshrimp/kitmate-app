@@ -20,6 +20,26 @@ function coursesForYear(year: number): Promise<Course[]> {
   return p;
 }
 
+/**
+ * 指定年度の講義から id→Course マップを構築する (フック外・非 React 文脈用)。
+ * useCourseMap と同じ年度キャッシュを共有し、足りない id は個別取得で補完する。
+ */
+export async function loadCourseMap(year: number, ids: string[]): Promise<CourseMap> {
+  const map: CourseMap = {};
+  try {
+    const list = await coursesForYear(year);
+    for (const c of list) map[c.id] = c;
+  } catch (e) {
+    console.error('loadCourseMap: list fetch failed', e);
+  }
+  const missing = ids.filter((id) => map[id] === undefined);
+  if (missing.length > 0) {
+    const results = await Promise.allSettled(missing.map((id) => fetchCourse(id)));
+    for (const r of results) if (r.status === 'fulfilled') map[r.value.id] = r.value;
+  }
+  return map;
+}
+
 interface LoadedMap {
   key: string;
   map: CourseMap;

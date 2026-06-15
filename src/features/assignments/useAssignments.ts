@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { startOfTodayUnixSec } from './format';
 import { syncAssignmentNotifications } from './notifications';
+import { buildNextAssignment } from '@/features/widgets/payload';
+import { useWidgetData } from '@/features/widgets/store';
 import { getUpcomingEvents, isInvalidToken } from '@/lib/moodle';
 import { useAuth } from '@/store/auth';
 import type { AssignmentEvent } from '@/types';
@@ -35,6 +37,8 @@ export function useAssignments(): UseAssignmentsResult {
         const sorted = [...list].sort((a, b) => a.timesort - b.timesort);
         setEvents(sorted);
         setStatus('ready');
+        // ホーム画面ウィジェット用に直近の課題を共有
+        useWidgetData.getState().setAssignment(buildNextAssignment(sorted));
         // 通知の再スケジュール (失敗しても UI には影響させない)
         void syncAssignmentNotifications(sorted);
       } catch (e) {
@@ -53,7 +57,9 @@ export function useAssignments(): UseAssignmentsResult {
   );
 
   useEffect(() => {
-    if (wstoken !== null) void load('initial');
+    if (wstoken === null) return;
+    // マイクロタスクへ逃がし、effect 本体での同期 setState を避ける
+    queueMicrotask(() => void load('initial'));
   }, [wstoken, load]);
 
   const reload = useCallback(() => {

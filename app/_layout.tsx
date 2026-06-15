@@ -10,6 +10,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import AuthBootstrap from '@/features/auth/AuthBootstrap';
 import { useNotificationHistoryListener } from '@/features/notifications/useNotificationHistoryListener';
+import { useWidgetSync } from '@/features/widgets/useWidgetSync';
 import { installFontScalePatch } from '@/lib/fontScale';
 import { useAnalytics } from '@/lib/useAnalytics';
 import { ThemeProvider, useTheme } from '@/theme';
@@ -20,6 +21,7 @@ function RootNavigator() {
   const { colors, dark } = useTheme();
   useNotificationHistoryListener(); // 受信通知を履歴に記録
   useAnalytics(); // app_open / screen_view を GA に送信
+  useWidgetSync(); // ホーム画面ウィジェット用データを共有ストレージへ反映
   const base = dark ? DarkTheme : DefaultTheme;
   const navigationTheme = {
     ...base,
