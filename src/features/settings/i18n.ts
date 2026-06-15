@@ -9,6 +9,7 @@ export const settingsI18n = {
     version: 'バージョン {v}',
 
     // ===== セクション =====
+    sectionAccount: 'アカウント',
     sectionProfile: 'プロフィール',
     sectionDisplay: '表示',
     sectionNotifications: '通知',
@@ -111,6 +112,7 @@ export const settingsI18n = {
     version: 'Version {v}',
 
     // ===== Sections =====
+    sectionAccount: 'Account',
     sectionProfile: 'Profile',
     sectionDisplay: 'Display',
     sectionNotifications: 'Notifications',

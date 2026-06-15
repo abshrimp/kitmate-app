@@ -16,6 +16,7 @@ import {
 } from '@/components/ui';
 import { cancelAssignmentNotifications } from '@/features/assignments/notifications';
 import { showAlert } from '@/features/settings/dialogs';
+import { AccountSection } from '@/features/settings/AccountSection';
 import { NotifyTimingPicker } from '@/features/settings/NotifyTimingPicker';
 import { PushSetupError, updatePushSubscription } from '@/features/settings/push';
 import { useI18n } from '@/i18n';
@@ -200,6 +201,9 @@ export default function SettingsScreen() {
 
   return (
     <Screen title={t('common.settings')}>
+      {/* ===== アカウント ===== */}
+      <AccountSection />
+
       {/* ===== プロフィール ===== */}
       <Section title={t('settings.sectionProfile')}>
         <Card>

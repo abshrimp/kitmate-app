@@ -108,7 +108,6 @@ export default function LoginScreen() {
               title={t('auth.usernameLabel')}
               subtitle={siteInfo.username}
             />
-            <ListItem icon="globe-outline" title={t('auth.siteLabel')} subtitle={siteInfo.siteurl} />
           </Card>
         </Section>
         <View style={styles.buttons}>

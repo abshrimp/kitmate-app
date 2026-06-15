@@ -73,7 +73,7 @@ export default function HomeScreen() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t('home.accountButton')}
-          onPress={() => router.push('/login')}
+          onPress={() => router.push('/settings')}
           hitSlop={8}
           style={({ pressed }) => pressed && styles.pressed}
         >
