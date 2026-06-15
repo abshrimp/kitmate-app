@@ -2,18 +2,20 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { TextField } from '@/components/ui';
+import { SegmentedControl, TextField } from '@/components/ui';
 import { useI18n, type I18n } from '@/i18n';
 import { useTheme } from '@/theme';
 
 // プリセットのリード時間 (時間)
 const PRESETS = [1, 3, 6, 12, 24, 48, 168];
+type Unit = 'm' | 'h' | 'd';
 
-/** リード時間(時間) を「○時間前 / ○日前 / ○週間前」に整形 */
+/** リード時間(時間) を総分から最適単位の「○分前 / ○時間前 / ○日前」に整形 */
 function leadLabel(h: number, t: I18n['t']): string {
-  if (h % 168 === 0) return t('settings.leadWeeks', { n: h / 168 });
-  if (h % 24 === 0) return t('settings.leadDays', { n: h / 24 });
-  return t('settings.leadHours', { n: h });
+  const mins = Math.round(h * 60);
+  if (mins % 1440 === 0) return t('settings.leadDays', { n: mins / 1440 });
+  if (mins % 60 === 0) return t('settings.leadHours', { n: mins / 60 });
+  return t('settings.leadMinutes', { n: mins });
 }
 
 export interface NotifyTimingPickerProps {
@@ -26,6 +28,7 @@ export function NotifyTimingPicker({ value, onChange }: NotifyTimingPickerProps)
   const { t } = useI18n();
   const { colors } = useTheme();
   const [custom, setCustom] = useState('');
+  const [unit, setUnit] = useState<Unit>('h');
 
   const selected = new Set(value);
   const presetSet = new Set(PRESETS);
@@ -38,7 +41,8 @@ export function NotifyTimingPicker({ value, onChange }: NotifyTimingPickerProps)
   const addCustom = () => {
     const n = Number(custom.trim());
     if (!Number.isFinite(n) || n <= 0) return;
-    const h = Math.round(n);
+    const hours = unit === 'm' ? n / 60 : unit === 'd' ? n * 24 : n;
+    const h = Math.round(hours * 60) / 60; // 分単位に丸めて浮動小数の誤差を避ける
     if (!selected.has(h)) onChange([...value, h].sort((a, b) => a - b));
     setCustom('');
   };
@@ -82,6 +86,15 @@ export function NotifyTimingPicker({ value, onChange }: NotifyTimingPickerProps)
           </Pressable>
         ))}
       </View>
+      <SegmentedControl
+        options={[
+          { label: t('settings.unitMinute'), value: 'm' },
+          { label: t('settings.unitHour'), value: 'h' },
+          { label: t('settings.unitDay'), value: 'd' },
+        ]}
+        value={unit}
+        onChange={(v) => setUnit(v as Unit)}
+      />
       <View style={styles.customRow}>
         <View style={styles.customInput}>
           <TextField
