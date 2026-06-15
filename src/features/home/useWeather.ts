@@ -1,46 +1,46 @@
 import { useEffect, useState } from 'react';
 
-// 京都の天気 (weather.tsukumijima.net, city=260010)。
+// 京都の天気 (weather.tsukumijima.net, city=260010)。今日〜明後日の3日分。
 const WEATHER_URL = 'https://weather.tsukumijima.net/api/forecast/city/260010';
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 時間
 
-export interface WeatherToday {
+export interface WeatherDay {
+  dateLabel: string; // 例「今日」「明日」「明後日」
   telop: string; // 例「晴時々曇」
   tempMax: string | null; // 摂氏 (文字列)
   tempMin: string | null;
-  chanceOfRain: string | null; // 代表値 (昼)
 }
 
 export type WeatherState =
-  | { status: 'loading'; data: WeatherToday | null }
-  | { status: 'ready'; data: WeatherToday }
-  | { status: 'error'; data: WeatherToday | null };
+  | { status: 'loading'; days: WeatherDay[] | null }
+  | { status: 'ready'; days: WeatherDay[] }
+  | { status: 'error'; days: WeatherDay[] | null };
 
-let cache: { at: number; data: WeatherToday } | null = null;
+let cache: { at: number; days: WeatherDay[] } | null = null;
 
 function str(v: unknown): string | null {
   return typeof v === 'string' && v !== '' ? v : null;
 }
 
-function parse(json: unknown): WeatherToday | null {
+function parse(json: unknown): WeatherDay[] | null {
   const forecasts = (json as { forecasts?: unknown[] } | null)?.forecasts;
-  const today = Array.isArray(forecasts) ? (forecasts[0] as Record<string, unknown>) : undefined;
-  if (today === undefined) return null;
-  const temp = today.temperature as { max?: { celsius?: unknown }; min?: { celsius?: unknown } } | undefined;
-  const rain = today.chanceOfRain as { T12_18?: unknown } | undefined;
-  return {
-    telop: str(today.telop) ?? '',
-    tempMax: str(temp?.max?.celsius),
-    tempMin: str(temp?.min?.celsius),
-    chanceOfRain: str(rain?.T12_18),
-  };
+  if (!Array.isArray(forecasts) || forecasts.length === 0) return null;
+  return forecasts.slice(0, 3).map((f) => {
+    const day = f as Record<string, unknown>;
+    const temp = day.temperature as { max?: { celsius?: unknown }; min?: { celsius?: unknown } } | undefined;
+    return {
+      dateLabel: str(day.dateLabel) ?? '',
+      telop: str(day.telop) ?? '',
+      tempMax: str(temp?.max?.celsius),
+      tempMin: str(temp?.min?.celsius),
+    };
+  });
 }
 
-/** 京都の今日の天気を取得 (1 時間メモリキャッシュ)。 */
+/** 京都の天気 (今日〜明後日) を取得 (1 時間メモリキャッシュ)。 */
 export function useWeather(): WeatherState {
-  // キャッシュがあればまず表示し、鮮度判定 (Date.now) は effect 内で行う
   const [state, setState] = useState<WeatherState>(
-    cache !== null ? { status: 'ready', data: cache.data } : { status: 'loading', data: null },
+    cache !== null ? { status: 'ready', days: cache.days } : { status: 'loading', days: null },
   );
 
   useEffect(() => {
@@ -49,14 +49,14 @@ export function useWeather(): WeatherState {
     fetch(WEATHER_URL, { headers: { accept: 'application/json' } })
       .then((r) => r.json())
       .then((json: unknown) => {
-        const data = parse(json);
-        if (data === null) throw new Error('weather: unexpected response');
-        cache = { at: Date.now(), data };
-        if (!cancelled) setState({ status: 'ready', data });
+        const days = parse(json);
+        if (days === null) throw new Error('weather: unexpected response');
+        cache = { at: Date.now(), days };
+        if (!cancelled) setState({ status: 'ready', days });
       })
       .catch((e: unknown) => {
         console.error('weather fetch failed', e);
-        if (!cancelled) setState((s) => ({ status: 'error', data: s.data }));
+        if (!cancelled) setState((s) => ({ status: 'error', days: s.days }));
       });
     return () => {
       cancelled = true;

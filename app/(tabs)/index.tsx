@@ -373,16 +373,16 @@ function QuickLinksSection() {
   );
 }
 
-/** 京都の今日の天気カード */
+/** 京都の天気カード (今日〜明後日の3日分) */
 function WeatherCard() {
   const { t } = useI18n();
   const { colors } = useTheme();
-  const { status, data } = useWeather();
+  const { status, days } = useWeather();
 
-  if (status === 'error' && data === null) return null; // 取得失敗かつキャッシュ無し → 非表示
-  if (data === null) {
+  if (status === 'error' && days === null) return null; // 取得失敗かつキャッシュ無し → 非表示
+  if (days === null) {
     return (
-      <Card style={styles.weatherCard}>
+      <Card style={styles.weatherLoading}>
         <ActivityIndicator size="small" color={colors.primary} />
         <Text style={[styles.weatherTelop, { color: colors.textSecondary }]}>
           {t('common.loading')}
@@ -391,29 +391,28 @@ function WeatherCard() {
     );
   }
 
-  const temps = [
-    data.tempMax !== null ? t('home.weatherMax', { n: data.tempMax }) : null,
-    data.tempMin !== null ? t('home.weatherMin', { n: data.tempMin }) : null,
-  ].filter((s): s is string => s !== null);
-
   return (
     <Card style={styles.weatherCard}>
-      <Ionicons name={weatherIcon(data.telop)} size={30} color={colors.accent} />
-      <View style={styles.weatherBody}>
-        <Text style={[styles.weatherTitle, { color: colors.textSecondary }]}>
-          {t('home.weatherTitle')}
-        </Text>
-        <Text style={[styles.weatherTelop, { color: colors.text }]}>{data.telop}</Text>
-      </View>
-      <View style={styles.weatherMeta}>
-        {temps.length > 0 && (
-          <Text style={[styles.weatherTemp, { color: colors.text }]}>{temps.join('  ')}</Text>
-        )}
-        {data.chanceOfRain !== null && (
-          <Text style={[styles.weatherRain, { color: colors.textSecondary }]}>
-            {t('home.weatherRain', { n: data.chanceOfRain })}
-          </Text>
-        )}
+      <Text style={[styles.weatherTitle, { color: colors.textSecondary }]}>
+        {t('home.weatherTitle')}
+      </Text>
+      <View style={styles.weatherDays}>
+        {days.map((d, i) => (
+          <View key={i} style={styles.weatherDay}>
+            <Text style={[styles.weatherDayLabel, { color: colors.textSecondary }]}>
+              {d.dateLabel}
+            </Text>
+            <Ionicons name={weatherIcon(d.telop)} size={26} color={colors.accent} />
+            <Text style={[styles.weatherDayTelop, { color: colors.text }]} numberOfLines={1}>
+              {d.telop}
+            </Text>
+            <Text style={styles.weatherDayTemp}>
+              <Text style={{ color: colors.danger }}>{d.tempMax ?? '—'}</Text>
+              <Text style={{ color: colors.textSecondary }}> / </Text>
+              <Text style={{ color: colors.primary }}>{d.tempMin ?? '—'}</Text>
+            </Text>
+          </View>
+        ))}
       </View>
     </Card>
   );
@@ -473,14 +472,14 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   weatherCard: {
+    marginBottom: 4,
+    gap: 8,
+  },
+  weatherLoading: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     marginBottom: 4,
-  },
-  weatherBody: {
-    flex: 1,
-    gap: 1,
   },
   weatherTitle: {
     fontSize: 12,
@@ -490,16 +489,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
-  weatherMeta: {
-    alignItems: 'flex-end',
-    gap: 2,
+  weatherDays: {
+    flexDirection: 'row',
   },
-  weatherTemp: {
-    fontSize: 14,
-    fontWeight: '700',
+  weatherDay: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 3,
   },
-  weatherRain: {
+  weatherDayLabel: {
     fontSize: 12,
+    fontWeight: '600',
+  },
+  weatherDayTelop: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  weatherDayTemp: {
+    fontSize: 13,
+    fontWeight: '700',
   },
   scheduleRow: {
     flexDirection: 'row',
