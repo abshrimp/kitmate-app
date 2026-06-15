@@ -69,6 +69,7 @@ export default function HomeScreen() {
   return (
     <Screen
       title={t('common.appName')}
+      centerTitle
       left={
         <Pressable
           accessibilityRole="button"
@@ -477,7 +478,8 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '700',
     paddingHorizontal: 4,
-    marginBottom: 2,
+    marginTop: 4,
+    marginBottom: 7,
   },
   dateRow: {
     flexDirection: 'row',

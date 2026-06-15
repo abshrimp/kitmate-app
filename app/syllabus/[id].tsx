@@ -1,17 +1,18 @@
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Badge, Button, Card, Chip, EmptyState, Screen, Section } from '@/components/ui';
+import { resolveBuildingFromRoom } from '@/features/map/buildings';
 import { CollapsibleText } from '@/features/syllabus/CollapsibleText';
 import {
   buildTimetableEntries,
-  categoryColor,
   categoryLabel,
   semesterOf,
   slotsLabel,
   termLabel,
 } from '@/features/syllabus/lib';
+import { categoryColor as categoryCellColor } from '@/features/timetable/labels';
 import { useTimetable } from '@/features/timetable/store';
 import { useI18n } from '@/i18n';
 import { ApiError, fetchCourse } from '@/lib/api';
@@ -33,7 +34,8 @@ function InfoRow({ label, value, last }: { label: string; value: string; last: b
 
 export default function SyllabusDetailScreen() {
   const { t } = useI18n();
-  const { colors } = useTheme();
+  const { colors, category: catColors } = useTheme();
+  const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const [course, setCourse] = useState<Course | null>(null);
@@ -116,6 +118,10 @@ export default function SyllabusDetailScreen() {
   const alreadyAdded = entries.some(
     (e) => e.courseId === course.id && e.year === viewYear && e.term === viewTerm,
   );
+  const roomBuildingId =
+    course.room !== undefined && course.room !== ''
+      ? resolveBuildingFromRoom(course.room)
+      : null;
 
   const onAdd = () => {
     for (const entry of buildTimetableEntries(course, viewYear, viewTerm)) {
@@ -164,7 +170,7 @@ export default function SyllabusDetailScreen() {
             {course.classLabel !== undefined ? `${course.name} ${course.classLabel}` : course.name}
           </Text>
           {category !== null && (
-            <Badge label={categoryLabel(t, category)} color={categoryColor(colors, category)} />
+            <Badge label={categoryLabel(t, category)} color={categoryCellColor(category, catColors)} />
           )}
         </View>
         <Text style={[styles.headerInstructors, { color: colors.textSecondary }]}>
@@ -176,7 +182,19 @@ export default function SyllabusDetailScreen() {
           <Chip icon="ribbon-outline" label={t('common.credits', { n: course.credits })} />
           <Chip icon="school-outline" label={t('common.grade', { n: course.targetGrade })} />
           {course.room !== undefined && course.room !== '' && (
-            <Chip icon="location-outline" label={course.room} />
+            roomBuildingId !== null ? (
+              <Pressable
+                accessibilityRole="link"
+                onPress={() =>
+                  router.push({ pathname: '/map', params: { building: roomBuildingId } })
+                }
+                style={({ pressed }) => pressed && styles.pressed}
+              >
+                <Chip icon="location-outline" tone="primary" label={course.room} />
+              </Pressable>
+            ) : (
+              <Chip icon="location-outline" label={course.room} />
+            )
           )}
           {!course.offeredThisYear && (
             <Badge label={t('syllabus.notOffered')} color={colors.warning} />
@@ -310,6 +328,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     marginTop: 2,
+  },
+  pressed: {
+    opacity: 0.6,
   },
   addArea: {
     marginTop: 10,

@@ -4,7 +4,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 're
 
 import { ENTRY_COLOR_PRESETS, withAlpha } from './colors';
 import { confirmAsync } from './confirm';
-import { categoryLabel, categoryTint, dayLabel } from './labels';
+import { categoryColor, categoryLabel, dayLabel } from './labels';
 import { useTimetable } from './store';
 import { resolveBuildingFromRoom } from '@/features/map/buildings';
 import { Badge, Button, Chip } from '@/components/ui';
@@ -42,7 +42,7 @@ function InfoRow({ icon, label, value }: InfoRowProps) {
 /** 講義セルタップで開く詳細ボトムシート */
 export function EntryDetailSheet({ entry, course, onClose }: EntryDetailSheetProps) {
   const { t } = useI18n();
-  const { colors } = useTheme();
+  const { colors, category: catColors } = useTheme();
   const router = useRouter();
   const updateEntry = useTimetable((s) => s.updateEntry);
   const removeEntry = useTimetable((s) => s.removeEntry);
@@ -66,10 +66,6 @@ export function EntryDetailSheet({ entry, course, onClose }: EntryDetailSheetPro
     category = categoryFor(course, admissionYear, programVariantKey(programSelection));
   }
 
-  const semesterLabel =
-    entry.term === 'first' ? t('common.semesterFirst') : t('common.semesterSecond');
-  const quartersLabel =
-    entry.quarters !== undefined && entry.quarters.length > 0 ? ` ${entry.quarters.join('/')}` : '';
   const hasSlot = entry.day !== undefined && entry.period !== undefined;
   const slotLabel =
     entry.day !== undefined && entry.period !== undefined
@@ -126,7 +122,7 @@ export function EntryDetailSheet({ entry, course, onClose }: EntryDetailSheetPro
                 <Badge label={t('timetable.customCourseBadge')} color={colors.accent} />
               )}
               {category !== undefined && (
-                <Badge label={categoryLabel(t, category)} color={categoryTint(category, colors)} />
+                <Badge label={categoryLabel(t, category)} color={categoryColor(category, catColors)} />
               )}
               {credits !== undefined && <Badge label={t('common.credits', { n: credits })} />}
               {classLabel !== undefined && classLabel !== '' && (
@@ -135,8 +131,6 @@ export function EntryDetailSheet({ entry, course, onClose }: EntryDetailSheetPro
             </View>
 
             <View style={styles.infoChips}>
-              <Chip icon="calendar-outline" label={t('common.year', { y: entry.year })} />
-              <Chip icon="bookmark-outline" label={`${semesterLabel}${quartersLabel}`} />
               <Chip icon="grid-outline" tone="primary" label={slotLabel} />
               {hasSlot && slotTime !== '' && <Chip icon="time-outline" label={slotTime} />}
             </View>

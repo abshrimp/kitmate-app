@@ -22,6 +22,8 @@ export interface ScreenProps {
   back?: boolean;
   /** モーダル表示の画面用。左上に閉じる(×)ボタンを出す (back より優先)。 */
   close?: boolean;
+  /** タイトルを中央寄せにする (左右にアイコンを置くアプリバー風ヘッダ用)。 */
+  centerTitle?: boolean;
 }
 
 /**
@@ -58,48 +60,64 @@ export function Screen({
   left,
   back,
   close = false,
+  centerTitle = false,
 }: ScreenProps) {
   const { colors } = useTheme();
   const { t } = useI18n();
   const navigation = useNavigation();
   const canGoBack = useCanGoBackInStack();
   const showBack = !close && (back ?? canGoBack);
+
+  const leadingButton = close ? (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={t('common.close')}
+      onPress={() => navigation.goBack()}
+      hitSlop={8}
+      style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
+    >
+      <Ionicons name="close" size={26} color={colors.primary} />
+    </Pressable>
+  ) : showBack ? (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={t('common.back')}
+      onPress={() => navigation.goBack()}
+      hitSlop={8}
+      style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
+    >
+      <Ionicons name="chevron-back" size={26} color={colors.primary} />
+    </Pressable>
+  ) : left != null ? (
+    <View style={styles.headerLeft}>{left}</View>
+  ) : null;
+
   return (
     <SafeAreaView
       style={[styles.root, { backgroundColor: colors.background }]}
       edges={['top', 'left', 'right']}
     >
-      {title !== undefined && (
-        <View style={styles.header}>
-          {close && (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t('common.close')}
-              onPress={() => navigation.goBack()}
-              hitSlop={8}
-              style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
+      {title !== undefined &&
+        (centerTitle ? (
+          <View style={styles.header}>
+            <View style={styles.sideZone}>{leadingButton}</View>
+            <Text
+              style={[styles.titleCentered, { color: colors.text }]}
+              numberOfLines={1}
             >
-              <Ionicons name="close" size={26} color={colors.primary} />
-            </Pressable>
-          )}
-          {showBack && (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t('common.back')}
-              onPress={() => navigation.goBack()}
-              hitSlop={8}
-              style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
-            >
-              <Ionicons name="chevron-back" size={26} color={colors.primary} />
-            </Pressable>
-          )}
-          {!showBack && !close && left != null && <View style={styles.headerLeft}>{left}</View>}
-          <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
-            {title}
-          </Text>
-          {right != null && <View style={styles.headerRight}>{right}</View>}
-        </View>
-      )}
+              {title}
+            </Text>
+            <View style={[styles.sideZone, styles.sideZoneEnd]}>{right}</View>
+          </View>
+        ) : (
+          <View style={styles.header}>
+            {leadingButton}
+            <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
+              {title}
+            </Text>
+            {right != null && <View style={styles.headerRight}>{right}</View>}
+          </View>
+        ))}
       {scroll ? (
         <ScrollView
           style={styles.flex}
@@ -133,6 +151,21 @@ const styles = StyleSheet.create({
     height: 32,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  sideZone: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  sideZoneEnd: {
+    justifyContent: 'flex-end',
+  },
+  titleCentered: {
+    fontSize: 20,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+    textAlign: 'center',
   },
   title: {
     flex: 1,

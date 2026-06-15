@@ -1,7 +1,8 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { categoryColor, categoryLabel, slotsLabel, termLabel } from './lib';
+import { categoryLabel, slotsLabel, termLabel } from './lib';
 import { Badge, Card, Chip } from '@/components/ui';
+import { categoryColor as categoryCellColor } from '@/features/timetable/labels';
 import { useI18n } from '@/i18n';
 import { useSettings } from '@/store/settings';
 import { useTheme } from '@/theme';
@@ -15,7 +16,7 @@ export interface CourseListItemProps {
 /** 検索結果 1 件分のカード */
 export function CourseListItem({ course, onPress }: CourseListItemProps) {
   const { t } = useI18n();
-  const { colors } = useTheme();
+  const { colors, category: catColors } = useTheme();
   const admissionYear = useSettings((s) => s.admissionYear);
   const programSelection = useSettings((s) => s.programSelection);
 
@@ -33,7 +34,7 @@ export function CourseListItem({ course, onPress }: CourseListItemProps) {
           {title}
         </Text>
         {category !== null && (
-          <Badge label={categoryLabel(t, category)} color={categoryColor(colors, category)} />
+          <Badge label={categoryLabel(t, category)} color={categoryCellColor(category, catColors)} />
         )}
       </View>
       <Text style={[styles.instructors, { color: colors.textSecondary }]} numberOfLines={1}>
