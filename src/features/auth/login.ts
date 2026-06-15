@@ -1,6 +1,7 @@
 import * as WebBrowser from 'expo-web-browser';
 import { Platform } from 'react-native';
 
+import { track } from '@/lib/analytics';
 import {
   buildLaunchUrl,
   getSiteInfo,
@@ -68,6 +69,7 @@ export async function loginWithBrowser(): Promise<LoginResult> {
     useAuth.getState().setSession(wstoken, info);
     applyProfileFromUsername(info.username); // username から入学年度・課程・Tech を自動適用
     await markValidatedNow();
+    track('login', { method: 'moodle' });
     return { status: 'success' };
   } catch (e) {
     console.error('loginWithBrowser: token validation failed', e);
@@ -85,6 +87,7 @@ export async function loginWithBrowser(): Promise<LoginResult> {
 export async function logout(): Promise<void> {
   useAuth.getState().clearSession();
   await remove(LAST_VALIDATED_KEY);
+  track('logout');
 }
 
 /** 永続化されたトークン検証時刻 (unix ms)。無ければ null */
