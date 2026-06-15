@@ -22,6 +22,7 @@ export interface WidgetAssignment {
   title: string;
   course: string;
   dueAt: number; // unix 秒
+  dueLabel: string; // 例 "6/15 23:59"
 }
 
 /** ホーム画面ウィジェットへ渡す共有ペイロード (iOS/Android 共通) */
@@ -80,7 +81,16 @@ export function buildNextAssignment(events: AssignmentEvent[]): WidgetAssignment
   const sorted = [...events].sort((a, b) => a.timesort - b.timesort);
   const first = sorted[0];
   if (first === undefined) return null;
-  return { title: first.activityname, course: first.courseFullname, dueAt: first.timesort };
+  const d = new Date(first.timesort * 1000);
+  const hh = d.getHours();
+  const mm = d.getMinutes().toString().padStart(2, '0');
+  const dueLabel = `${d.getMonth() + 1}/${d.getDate()} ${hh}:${mm}`;
+  return {
+    title: first.activityname,
+    course: first.courseFullname,
+    dueAt: first.timesort,
+    dueLabel,
+  };
 }
 
 /** 日付ラベル "6/15 (日)" を作る */
