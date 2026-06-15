@@ -29,7 +29,19 @@ function findRenderTarget(): PatchableText | null {
 export function installFontScalePatch(): void {
   const TextRef = findRenderTarget();
   if (TextRef === null) {
-    console.warn('[fontScale] Text.render not found; font scaling disabled');
+    // 構造を調査するための診断ログ (この RN の Text の形を把握して対象を特定する)
+    const t = Text as unknown as Record<string, unknown>;
+    const type = t.type as Record<string, unknown> | undefined;
+    console.warn('[fontScale] Text shape:', {
+      typeofText: typeof Text,
+      keys: Object.keys(t),
+      $$typeof: typeof t.$$typeof === 'symbol' ? (t.$$typeof as symbol).toString() : t.$$typeof,
+      typeofRender: typeof t.render,
+      typeofType: typeof t.type,
+      typeKeys: type !== undefined ? Object.keys(type) : null,
+      typeofTypeRender: type !== undefined ? typeof type.render : null,
+      typeofTypeType: type !== undefined ? typeof type.type : null,
+    });
     return;
   }
   const original = TextRef.render;
